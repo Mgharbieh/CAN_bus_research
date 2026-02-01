@@ -63,7 +63,6 @@ ApplicationWindow {
                 anchors.margins: 6
                 clip: true 
 
-                
                 ScrollBar.vertical: ScrollBar {
                     parent: viewSourceCode
                     x: viewSourceCode.mirrored ? 0 : viewSourceCode.width - width
@@ -109,22 +108,82 @@ ApplicationWindow {
                     color: backgroundcolor2
                     radius: sourceCodeRect.radius
                 }
-                
-                TextArea {
-                    id: sourceCodeText
-                    text: ""
-                    color: "#FFFFFF"
-                    font.pixelSize: 20
-                    readOnly: true
-                    wrapMode: TextEdit.NoWrap
-                    width: parent.width // Bind width to the ScrollView's available width
-                    height: parent.height
-                    background: Rectangle {
-                        color: backgroundcolor2
-                        radius: 15
+
+                contentWidth: contentContainer.width
+                contentHeight: contentContainer.height
+
+                Item {
+                    id: contentContainer
+                    height: savedList.contentHeight 
+                    width: Math.max(viewSourceCode.availableWidth, savedList.contentWidth) 
+
+                    ListView {
+                        id: savedList
+                        anchors.fill: parent 
+                        interactive: false  
+                        orientation: Qt.Vertical
+                        model: codeModel
+                        boundsBehavior: Flickable.StopAtBounds
+                        
+                        delegate: Item {
+                            width: parent.availableWidth; height: 35
+                            
+                            Rectangle {
+                                id: delegateRect
+                                anchors {
+                                    fill: parent
+                                    margins: 0
+                                }
+                                color: backgroundcolor2
+
+                                Text {
+                                    id: lineNum
+                                    anchors {
+                                        left: parent.left
+                                        top: parent.top
+                                        bottom: parent.bottom
+                                        leftMargin: 2
+                                    }
+                                    text: line_index
+                                    font.family: "Consolas"
+                                    font.pixelSize: 25
+                                    color: textColor
+                                    horizontalAlignment: Text.AlignLeft
+                                }
+
+                                Rectangle {
+                                    id: lineNum_separatorbar
+                                    anchors {
+                                        left: lineNum.right
+                                        top: parent.top
+                                        bottom: parent.bottom
+                                        leftMargin: 5
+                                    }  
+                                    width: 3
+                                    color: "#1A1A1A"
+                                }
+
+                                Text {
+                                    id: codeLine
+                                    anchors {
+                                        left: lineNum_separatorbar.right
+                                        top: parent.top
+                                        bottom: parent.bottom
+                                        leftMargin: 8
+                                    }
+                                    text: code_line
+                                    font.pixelSize: 25
+                                    color: textColor
+                                }
+                            }
+                        }
                     }
                 }
             }
+        }
+
+        ListModel {
+            id: codeModel
         }
 
         RectangularShadow {
@@ -161,7 +220,7 @@ ApplicationWindow {
                     parent: viewIssues
                     x: viewIssues.mirrored ? 0 : viewIssues.width - width
                     y: viewIssues.topPadding
-                    height: viewIssues.availableHeight
+                    height: viewIssues.availableHeight 
                     policy: ScrollBar.AsNeeded
                     interactive: true
                     padding: 0
@@ -204,10 +263,12 @@ ApplicationWindow {
                     radius: issuesRect.radius
                 }
 
+                contentHeight: contentColumn.implicitHeight + 20
+
                 ColumnLayout {
                     id: contentColumn
                     width: Math.max(viewIssues.availableWidth, implicitWidth)
-                    spacing: 8 
+                    spacing: 0
                 
                     IssuePane {
                         id: maskFiltPane
@@ -241,6 +302,37 @@ ApplicationWindow {
                 }
             }
         }
+
+        RectangularShadow {
+            anchors.fill: suggestionRect
+            offset.x: 5 
+            offset.y: 5 
+            radius: suggestionRect.radius
+            blur: 20 // Shadow softness
+            spread: 0 // Shadow size relative to source
+            color: "#80000000" // Shadow color with alpha (black, 50% opacity)
+            antialiasing: true // Smooth the edges
+        }
+
+        Rectangle {
+            id: suggestionRect
+            anchors {
+                top: sourceCodeRect.bottom
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+                margins: 15
+            }
+            color: backgroundcolor2
+            radius: 15
+
+            Text {
+                anchors.centerIn: parent
+                font.pixelSize: 30
+                text: "LLM suggestions go here"
+                color: textColor
+            }
+        }
     }
 
     function setFileInfo(code, infoStream) {
@@ -249,7 +341,13 @@ ApplicationWindow {
 
         windowRoot.title = infoStream.file_name
         infoTitleBar.setTitleText(infoStream.file_name)
-        sourceCodeText.text = code
+        for (var i = 0; i < code.length; i++) {
+            var line = {
+                "line_index": (i+1).toString().padStart(4, " "),
+                "code_line": code[i]
+            }
+            codeModel.append(line)
+        }
         
         infoStream.mask_filt.mf_messages.forEach(function(item) {
             temp += ("• " + item) + "\n"

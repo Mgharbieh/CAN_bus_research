@@ -1,4 +1,6 @@
+import QtQml 6.10
 import QtQuick 6.10
+import QtQuick.Window 6.10
 import QtQuick.Controls 6.10
 import QtQuick.Effects 6.10
 import QtQuick.Dialogs 6.10
@@ -11,15 +13,18 @@ ApplicationWindow {
 
     property bool scanInProgress: false
     property int itemBeingScanned: -1
+    property int itemSelected: -1
     property string path_to_file: ""
 
     property var fileInfoWindow: null
-    property var details
-
+    property bool loadingWindow: false
+    
     //temp, find better solution later
-    property string sourceCode 
+    property var details
+    property var sourceCode 
 
     signal scanFile(string path)
+    signal loadSelectedFile(string name)
     
     title: "StatiCAN"
     flags: Qt.Window | Qt.FramelessWindowHint
@@ -34,11 +39,26 @@ ApplicationWindow {
     Connections {
         target: ISSUE_CHECKER
 
-        function onFileProcessed(issueCount, data, code) {
+        function onFileProcessed(issueCount) {
             savedModel.setProperty(itemBeingScanned, "issues", issueCount)
+            scanInProgress = false
+        }
+
+        function onFileLoaded(code, data) {
             details = JSON.parse(data)
             sourceCode = code
-            scanInProgress = false
+            openFileInfo()
+        }
+
+        function onPopulateSavedFiles(fileList) {
+            var data = JSON.parse(fileList)
+            data.files.forEach(function(item) {
+                var card = {
+                    "file_name": item.file_name,
+                    "issues": item.totalIssues,
+                }
+                savedModel.insert(0, card)
+            }) 
         }
     }
 
@@ -273,11 +293,20 @@ ApplicationWindow {
                                 anchors.fill: parent
                                 flat: true
 
-                                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                                HoverHandler {
+                                    cursorShape: {
+                                        if(loadingFileIndicator.visible === true) { return Qt.WaitCursor} 
+                                        else if(loadingWindow === true) { return Qt.WaitCursor }
+                                        else { return Qt.PointingHandCursor }
+                                    } //cursorShape: loadingWindow === true ? Qt.WaitCursor : Qt.PointingHandCursor
+                                }
 
                                 onClicked: { 
                                     console.log("clicked")
-                                    openFileInfo()
+                                    loadingWindow = true
+                                    itemSelected = index
+                                    busyTimer.start()
+                                    //openFileInfo()
                                 }
                             }
                         }
@@ -293,6 +322,16 @@ ApplicationWindow {
                     color: textColor
                     visible: savedList.count === 0 ? true : false
                 }
+            }
+        }
+
+        Timer {
+            id: busyTimer
+            interval: 200
+            repeat: false
+            onTriggered: {
+                //openFileInfo()
+                loadSelectedFile(savedModel.get(itemSelected).file_name)
             }
         }
 
@@ -363,6 +402,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 //radius: 45
                 flat: true
+                enabled: !loadingWindow
                 
 
                 onClicked: if(!scanInProgress) {uploadFileDialog.open()}
@@ -603,21 +643,23 @@ ApplicationWindow {
         var name = path_to_file.split("/")
         var newElem = {
             "file_name": name[name.length - 1],
-            "issues": -1
+            "issues": -1,
         }
         scanInProgress = true
-        savedModel.append(newElem)
-        itemBeingScanned = savedList.count - 1
+        savedModel.insert(0, newElem)
+        itemBeingScanned = 0
         uiDelay.start()
     }
 
     function openFileInfo() {
+        loadingWindow = true
         if (fileInfoWindow === null) {
             var component = Qt.createComponent("FileInfo.qml");        
             if (component.status === Component.Ready) {
                 fileInfoWindow = component.createObject(null)
                 fileInfoWindow.setFileInfo(sourceCode, details)
                 fileInfoWindow.show()
+                loadingWindow = false
                 fileInfoWindow.closing.connect(function() {
                     fileInfoWindow = null;  
                 });
@@ -627,7 +669,9 @@ ApplicationWindow {
         } else {
             fileInfoWindow.raise();
             fileInfoWindow.requestActivate();
+            loadingWindow = false
         }
+        //Qt.application.restoreOverrideCursor()
     }
 
     // NOT CONNECTED TO ANYTHING YET //

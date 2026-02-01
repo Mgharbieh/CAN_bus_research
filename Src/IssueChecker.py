@@ -55,7 +55,6 @@ class IssueChecker():
         dataStream["dlc"] = {"dlc_issues":dlcIssuesFound, "dlc_messages":dlcIssueMessages}
 
         dataStream["totalIssues"] = issuesFound
-        dataStream = json.dumps(dataStream)
         return issuesFound, dataStream, sourceCode
 
 

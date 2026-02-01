@@ -1,41 +1,81 @@
 import sys
 import IssueChecker 
+import fileHandler
 
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
 from PyQt6.QtQml import QQmlApplicationEngine
 from PyQt6.QtGui import QGuiApplication
 
 class WorkerSignals(QObject):
-    result = pyqtSignal(int, str, str)
+    analysisResult = pyqtSignal(int)
+    fileResult = pyqtSignal(list, str)
 
 class AnalysisWorker(QRunnable):
-    def __init__(self, checker, path):
+    def __init__(self, checker, fileManager, path):
         super().__init__()
         self.checker = checker
+        self.fileManager = fileManager
         self.path = path
         self.signals = WorkerSignals()
 
     @pyqtSlot()
     def run(self):
         try:
+            if(self.fileManager.check_file_exists(self.path.split('/')[-1][:-4] + '_ino.json')):
+                return
+            
             issueCount, data, code = self.checker.analyzeFile(self.path)
-            self.signals.result.emit(issueCount, data, code)
+            fileName = self.path.split('/')[-1][:-4]
+            fileData = {"data":data, "sourceCode":code, "path":self.path}
+            if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
+                self.signals.analysisResult.emit(issueCount)
         except Exception as e:
             print(f"Error in worker: {e}")
 
+class LoaderWorker(QRunnable):
+    def __init__(self, fileManager, fileName):
+        super().__init__()
+        self.fileManager = fileManager
+        self.name = fileName
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            code, fileData = self.fileManager.load_file(self.name)
+            if fileData:
+                self.signals.fileResult.emit(code, fileData)
+        except Exception as e:
+            print(f"Error in worker: {e}")
+
+
 class AnalysisInterface(QObject):
 
-    fileProcessed = pyqtSignal(int, str, str)
+    fileProcessed = pyqtSignal(int)
+    fileLoaded = pyqtSignal(list, str)
+    populateSavedFiles = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.fileManager = fileHandler.FileHandler()
         self.checker = IssueChecker.IssueChecker()
         self.threadPool = QThreadPool()
 
+    def populateSavedFileList(self):
+        saved_files = self.fileManager.loadPreviousScans()
+        if(type(saved_files) != list):
+            self.populateSavedFiles.emit(saved_files)
+
     def analyzeFile(self, path):
-        worker = AnalysisWorker(self.checker, path)
-        worker.signals.result.connect(self.fileProcessed.emit)
+        worker = AnalysisWorker(self.checker, self.fileManager,path)
+        worker.signals.analysisResult.connect(self.fileProcessed.emit)
         self.threadPool.start(worker)
+        
+    def loadFile(self, name):
+        worker = LoaderWorker(self.fileManager, name)
+        worker.signals.fileResult.connect(self.fileLoaded.emit)
+        self.threadPool.start(worker)
+
 
 app = QGuiApplication(sys.argv)
 interface = AnalysisInterface()
@@ -47,7 +87,10 @@ engine.load('./ui/Main.qml')
 if not engine.rootObjects():
     sys.exit(-1)
 
+interface.populateSavedFileList()
 root_object = engine.rootObjects()[0]
 root_object.scanFile.connect(interface.analyzeFile)
+root_object.loadSelectedFile.connect(interface.loadFile)
+
 
 sys.exit(app.exec())

@@ -3,7 +3,7 @@ import QtQuick.Controls 6.10
 
 Item {
     visible: true
-    implicitHeight: issueTextArea.contentHeight + 10
+    implicitHeight: issueTextArea.contentHeight + 20
     implicitWidth: issueTextArea.contentWidth + 50
 
     property var scrollRef: null
@@ -12,7 +12,7 @@ Item {
         id: issueTitleBar
         color: accent1color
         x: scrollRef ? scrollRef.contentItem.contentX : 0
-        width: scrollRef ? scrollRef.availableWidth : parent.width
+        width: scrollRef ? scrollRef.availableWidth - 12: parent.availableWidth
         height: 40
         radius: 10
 
@@ -26,9 +26,13 @@ Item {
                 leftMargin: 5
             }
             text: ""
+            width: parent.width - 5
             color: "#FFFFFF" //change to titleTextColor variable later
+            minimumPixelSize: 10
             font.pixelSize: 30
+            fontSizeMode: Text.Fit
             font.bold: true
+            verticalAlignment: Text.AlignVCenter
         }
     }
 

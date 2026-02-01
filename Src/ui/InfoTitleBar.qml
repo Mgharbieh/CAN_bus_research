@@ -30,7 +30,7 @@ Rectangle {
             right: parent.right
             bottom: parent.bottom
             top: parent.top
-            rightMargin: 2
+            //rightMargin: 2
         }
 
         width: 30
