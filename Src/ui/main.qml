@@ -593,6 +593,8 @@ ApplicationWindow {
                         radius: 5
                     }
                 }
+
+                onClicked: helpPage.helpPagePressed()
             }
         }
     
@@ -622,6 +624,11 @@ ApplicationWindow {
         }
     }
     
+    HelpPage {
+        id: helpPage
+    }
+
+
     FileDialog {
         id: uploadFileDialog
         nameFilters: ["INO Files (*.ino)"]
