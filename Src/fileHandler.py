@@ -2,7 +2,7 @@ import os
 import json
 import shutil
 from pathlib import Path
-from platformdirs import site_data_dir
+from platformdirs import user_documents_dir
 
 class AlreadyExistsError(Exception): # will implement later for better solution
     pass
@@ -10,7 +10,7 @@ class AlreadyExistsError(Exception): # will implement later for better solution
 class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ###
     def __init__(self):
         self.current_file = {}
-        self.save_dir = Path(site_data_dir("StatiCAN")) / "Saved_Files"
+        self.save_dir = Path(user_documents_dir()) / "StatiCAN"/ "Saved_Files"
         self.alreadyExistsError = AlreadyExistsError
 
         print(f"Save directory: {self.save_dir}")
