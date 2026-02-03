@@ -372,12 +372,12 @@ ApplicationWindow {
         })
         dlcPane.populateModule("Data Length Code (" + infoStream.dlc.dlc_issues + ")", temp)
 
-        temp = ""
-        infoStream.bytePacking.bytePacking_messages.forEach(function(item) {
-            temp += ("• " + item) + "\n"
+       temp = ""
+        infoStream.dataPack.dataPack_messages.forEach(function(item) {
+           temp += ("• " + item) + "\n"
         })
-        bytePackingPane.populateModule("Byte Packing (" + infoStream.bytePacking.bytePacking_issues + ")", temp)
-
+        bytePackingPane.populateModule("Data Byte Packing (" + infoStream.dataPack.dataPack_issues + ")", temp)
+        
         windowRoot.visible = true
     }
 }
