@@ -372,9 +372,11 @@ ApplicationWindow {
         })
         dlcPane.populateModule("Data Length Code (" + infoStream.dlc.dlc_issues + ")", temp)
 
-        temp = "pls fix serene"
-        // datalength code here when fixed //
-        bytePackingPane.populateModule("Byte Packing Violations", temp)
+        temp = ""
+        infoStream.bytePacking.bytePacking_messages.forEach(function(item) {
+            temp += ("• " + item) + "\n"
+        })
+        bytePackingPane.populateModule("Byte Packing (" + infoStream.bytePacking.bytePacking_issues + ")", temp)
 
         windowRoot.visible = true
     }

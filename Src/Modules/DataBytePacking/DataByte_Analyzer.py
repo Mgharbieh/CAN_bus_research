@@ -20,17 +20,18 @@ class DataBytePackingAnalyzer:
         return cursor.captures(root)
 
     def _txt(self, node):
+        if node is None:
+            return ""
         return node.text.decode("utf-8", "ignore").strip()
 
     def _int(self, node):
-        # convert number_literal node to int
         try:
             return int(self._txt(node), 0)
         except Exception:
             return None
 
     #queries
-    # Find declared data buffers (BYTES side), ex. byte stmp[8]; or uint8_t data[7];
+    #find declared data buffers (BYTES side), ex. byte stmp[8]; or uint8_t data[7];
     def _buf_decl_search(self, root):
         q = r"""
         (
@@ -55,28 +56,28 @@ class DataBytePackingAnalyzer:
         q = r"""
         ;dlc can be assigned in 3 diff ways
         (
-          (assignment_expression              ;simple assignment
+          (assignment_expression
             left: (identifier) @name
-            right: (number_literal) @val
+            right: (number_literal) @val        ;simple assignment
           )
         )
 
         (
           (declaration
-            declarator: (init_declarator        ;declaration with initialization
+            declarator: (init_declarator
               declarator: (identifier) @name2
-              value: (number_literal) @val2
+              value: (number_literal) @val2     ;declaration with assignment
             )
           )
         )
 
         (
           (assignment_expression
-            left: (field_expression            ;field assignment
+            left: (field_expression
               argument: (identifier) @obj
               field: (field_identifier) @field
             )
-            right: (number_literal) @val3
+            right: (number_literal) @val3       ;object field assignment
           )
           (#match? @field "^(can_dlc|length|dlc)$")
         )
@@ -105,13 +106,12 @@ class DataBytePackingAnalyzer:
             if obj and field and val is not None:
                 self.dlc_values.setdefault(f"{obj}.{field}", []).append((o.start_byte, val))
 
-        #keeps in order so "latest before call" works
+        #keep assignments sorted so "latest before call" works
         for k in self.dlc_values:
             self.dlc_values[k].sort(key=lambda x: x[0])
-
     #finds max bytes written into frame.data[] (BYTES side)
     def _frame_bytes_search(self, root):
-        #frame.data[idx]
+        #frame.data[idx] 
         q1 = r"""
         (
           (assignment_expression
@@ -128,11 +128,10 @@ class DataBytePackingAnalyzer:
         )
         """
         caps1 = self._cap(root, q1)
-        
+
         hits = caps1.get("hit", [])
         frames = caps1.get("frame", [])
         idxs = caps1.get("idx", [])
-
         #max index written to frame.data[] and adds 1 for byte count
         for k in range(min(len(hits), len(frames), len(idxs))):
             frame = self._txt(frames[k])
@@ -140,7 +139,7 @@ class DataBytePackingAnalyzer:
             if frame and i is not None:
                 self.frame_bytes[frame] = max(self.frame_bytes.get(frame, 0), i + 1)
 
-        #memcpy(frame.data, src, size) 
+        #memcpy(frame.data, src, size)
         q2 = r"""
         (
           (call_expression
@@ -159,19 +158,19 @@ class DataBytePackingAnalyzer:
             dest = self._txt(args[0])
             src = self._txt(args[1])
 
-            #counts memcpy writes into ".data"
+            #only count memcpy writes into ".data"
             if not dest.endswith(".data"):
                 continue
 
             frame = dest.split(".")[0].strip()
-
-            # Size may be literal or based on a known buffer variable
+            #Size may be literal or based on a known buffer variable
             size = self._int(args[2])
             if size is None and src in self.buf_sizes:
                 size = self.buf_sizes[src]
 
             if frame and size is not None:
                 self.frame_bytes[frame] = max(self.frame_bytes.get(frame, 0), size)
+
     #find CAN send calls and their arguments (to get DLC and BYTES)
     def _can_calls(self, root):
         q = r"""
@@ -188,8 +187,8 @@ class DataBytePackingAnalyzer:
         """
         caps = self._cap(root, q)
         return list(zip(caps.get("call", []), caps.get("args", [])))
-
-    # resolve most recent DLC assignment before call position (should work in setup() and loop())
+    
+    #resolve most recent DLC assignment before call position (should work in setup() and loop())
     def _resolve_dlc_before(self, key, call_pos):
         if key not in self.dlc_values:
             return None
@@ -205,16 +204,20 @@ class DataBytePackingAnalyzer:
     def _compare(self, call_txt, dlc, bytes_sent, assumed):
         suffix = " (Assumed DLC=8)" if assumed else ""
         if bytes_sent is None:
-            return f"{call_txt} DLC={dlc} BYTES=unknown.{suffix}"
+            # informational, not counted as an "issue"
+            return f"{call_txt} DLC={dlc} BYTES=unknown.{suffix}", 0
 
         if dlc == bytes_sent:
-            return f"{call_txt} DLC={dlc} matches BYTES={bytes_sent}. No issues found.{suffix}"
+            return f"{call_txt} DLC={dlc} matches BYTES={bytes_sent}. No issues found.{suffix}", 0
         if dlc < bytes_sent:
-            return f"{call_txt}  DLC={dlc} < BYTES={bytes_sent}. (Overflow){suffix}"
-        return f"{call_txt}  DLC={dlc} > BYTES={bytes_sent}. (Underflow){suffix}"
+            return f"{call_txt}  DLC={dlc} < BYTES={bytes_sent}. (Overflow){suffix}", 1
+        return f"{call_txt}  DLC={dlc} > BYTES={bytes_sent}. (Underflow){suffix}", 1
 
     #analyzes a single CAN send call and calls compare
     def _analyze_call(self, call_node, args_node):
+        if call_node is None or args_node is None:
+            return None, 0
+
         call_txt = self._txt(call_node)
 
         fn_node = call_node.child_by_field_name("function")
@@ -222,28 +225,33 @@ class DataBytePackingAnalyzer:
 
         args = [c for c in args_node.children if c.type not in ("(", ")", ",")]
 
-        #mcp2515.sendMessage(frame)
+        #mcp2515.sendMessage(&canMsg)
         if "sendmessage" in fn_txt and len(args) >= 1:
-            frame = self._txt(args[0])
-            if frame.startswith("&"):
-                frame = frame[1:].strip()
+            frame = self._txt(args[0]).lstrip("&").strip()
 
-            #DLC comes from fields like canMsg.can_dlc / canMsg.length / canMsg.dlc
-            dlc = (self._resolve_dlc_before(f"{frame}.can_dlc", call_node.start_byte)or self._resolve_dlc_before(f"{frame}.length", call_node.start_byte)or self._resolve_dlc_before(f"{frame}.dlc", call_node.start_byte))
+            dlc = (
+                self._resolve_dlc_before(f"{frame}.can_dlc", call_node.start_byte)
+                or self._resolve_dlc_before(f"{frame}.length", call_node.start_byte)
+                or self._resolve_dlc_before(f"{frame}.dlc", call_node.start_byte)
+            )
+
             assumed = False
             if dlc is None:
                 dlc = 8
                 assumed = True
 
-            #BYTES comes from max writes to frame.data[]
             return self._compare(call_txt, dlc, self.frame_bytes.get(frame), assumed)
 
         #CAN.write(frame)
-        #CAN.write(extended_message) where bytes come from frame.data writes
         if "write" in fn_txt and len(args) == 1:
             frame = self._txt(args[0])
 
-            dlc = (self._resolve_dlc_before(f"{frame}.length", call_node.start_byte)or self._resolve_dlc_before(f"{frame}.can_dlc", call_node.start_byte)or self._resolve_dlc_before(f"{frame}.dlc", call_node.start_byte))
+            dlc = (
+                self._resolve_dlc_before(f"{frame}.length", call_node.start_byte)
+                or self._resolve_dlc_before(f"{frame}.can_dlc", call_node.start_byte)
+                or self._resolve_dlc_before(f"{frame}.dlc", call_node.start_byte)
+            )
+
             assumed = False
             if dlc is None:
                 dlc = 8
@@ -251,7 +259,7 @@ class DataBytePackingAnalyzer:
 
             return self._compare(call_txt, dlc, self.frame_bytes.get(frame), assumed)
 
-        #sendMsgBuf(...) or write(id,type,dlc,buf) ---
+        #sendMsgBuf(..., dlc, buf) or write(id,type,dlc,buf)
         if len(args) >= 2:
             if "write" in fn_txt and len(args) >= 4:
                 dlc_node, buf_node = args[2], args[3]
@@ -263,6 +271,7 @@ class DataBytePackingAnalyzer:
 
             dlc = self._int(dlc_node)
             if dlc is None:
+                #if dlc is a variable name, resolve its latest assignment before call
                 dlc = self._resolve_dlc_before(self._txt(dlc_node), call_node.start_byte)
 
             assumed = False
@@ -272,23 +281,21 @@ class DataBytePackingAnalyzer:
 
             return self._compare(call_txt, dlc, bytes_sent, assumed)
 
-        return None
+        return None, 0
 
-    def _dataPackCheck(self, root):
+    def checkDataPack(self, root):
         self._buf_decl_search(root)
         self._dlc_assign_search(root)
         self._frame_bytes_search(root)
 
-        print("#"*100,'\n')
+        messages = []
+        issues = 0
 
         for call_node, args_node in self._can_calls(root):
-            msg = self._analyze_call(call_node, args_node)
+            msg, inc = self._analyze_call(call_node, args_node)
             if msg:
-                print(msg)
+                messages.append(msg)
+                issues += inc
 
-        print()
-        print("#"*100)
-
-    def checkDataPack(self, root):
-        self._dataPackCheck(root)
         self._reset()
+        return issues, messages
