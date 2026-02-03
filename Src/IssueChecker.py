@@ -48,7 +48,9 @@ class IssueChecker():
         issuesFound += idLenIssuesFound
         dataStream["idLen"] = {"idLen_issues":idLenIssuesFound, "idLen_messages":idLenIssueMessages}
 
-        self.data_byte_packing_analyzer.checkDataPack(RootCursor)
+        dataPackIssuesFound, dataPackIssueMessages = self.data_byte_packing_analyzer.checkDataPack(RootCursor)
+        issuesFound += dataPackIssuesFound
+        dataStream["dataPack"] = {"dataPack_issues":dataPackIssuesFound, "dataPack_messages":dataPackIssueMessages}
 
         dlcIssuesFound, dlcIssueMessages = self.data_length_analyzer.checkDLC(RootCursor)
         issuesFound += dlcIssuesFound
