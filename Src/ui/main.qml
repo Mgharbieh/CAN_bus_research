@@ -6,15 +6,16 @@ import QtQuick.Effects 6.10
 import QtQuick.Dialogs 6.10
 
 ApplicationWindow { 
-    property string accent1color: "#144F85"
-    property string backgroundcolor: "#141414"
-    property string backgroundcolor2: "#242424"
-    property string textColor: "#FFFFFF"
+    property string accent1color: colorWay.accent1color
+    property string backgroundcolor: colorWay.backgroundcolor
+    property string backgroundcolor2: colorWay.backgroundcolor2
+    property string textColor: colorWay.textColor
 
     property bool scanInProgress: false
     property int itemBeingScanned: -1
     property int itemSelected: -1
     property string path_to_file: ""
+    property bool focused: true
 
     property var fileInfoWindow: null
     property bool loadingWindow: false
@@ -25,6 +26,7 @@ ApplicationWindow {
 
     signal scanFile(string path)
     signal loadSelectedFile(string name)
+    signal configUpdated(string key, var val)
     
     title: "StatiCAN"
     flags: Qt.Window | Qt.FramelessWindowHint
@@ -35,6 +37,8 @@ ApplicationWindow {
 
     visible: true
     color: "transparent"
+
+    ColorWay { id: colorWay }
 
     Connections {
         target: ISSUE_CHECKER
@@ -59,6 +63,10 @@ ApplicationWindow {
                 }
                 savedModel.insert(0, card)
             }) 
+        }
+
+        function onConfigFileLoaded(theme, contrast) {
+            settingsPage.init(theme, contrast)
         }
     }
 
@@ -134,7 +142,7 @@ ApplicationWindow {
 
         Rectangle {
             id: separatorBar
-            color: "#1A1A1A"
+            color: colorWay.separatorColor
             width: 3
             anchors {
                 top: parent.top
@@ -292,6 +300,7 @@ ApplicationWindow {
                                 id: accessElement
                                 anchors.fill: parent
                                 flat: true
+                                enabled: focused
 
                                 HoverHandler {
                                     cursorShape: {
@@ -402,7 +411,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 //radius: 45
                 flat: true
-                enabled: !loadingWindow
+                enabled: !loadingWindow && focused
                 
 
                 onClicked: if(!scanInProgress) {uploadFileDialog.open()}
@@ -410,11 +419,13 @@ ApplicationWindow {
                 HoverHandler { 
                     id: buttonHoverUpload
                     cursorShape: scanInProgress === true ? Qt.ForbiddenCursor : Qt.PointingHandCursor 
+                    enabled: focused
                 }
 
                 ToolTip {
                     id: uploadToolTip
                     visible: buttonHoverUpload.hovered
+                    enabled: focused
                     text: {
                         if(scanInProgress) {"Please wait until file is scanned"}
                         else {"Upload File"}
@@ -492,15 +503,18 @@ ApplicationWindow {
                 id: button_settings
                 anchors.fill: parent
                 flat: true
+                enabled: focused
 
                 HoverHandler { 
                     id: buttonHoverSettings
                     cursorShape: Qt.PointingHandCursor 
+                    enabled: focused
                 }
 
                 ToolTip {
                     id: settingsToolTip
                     visible: buttonHoverSettings.hovered
+                    enabled: focused
                     text: "Settings"
                     delay: 500
 
@@ -515,6 +529,7 @@ ApplicationWindow {
                         radius: 5
                     }
                 }
+                onClicked: { settingsPage.settingsPagePressed(); focused = false }
             }
         }
 
@@ -570,15 +585,18 @@ ApplicationWindow {
                 id: button_help
                 anchors.fill: parent
                 flat: true
+                enabled: focused
 
                 HoverHandler { 
                     id: buttonHoverHelp
                     cursorShape: Qt.PointingHandCursor 
+                    enabled: focused
                 }
 
                 ToolTip {
                     id: helpToolTip
                     visible: buttonHoverHelp.hovered
+                    enabled: focused
                     text: "Help"
                     delay: 500
 
@@ -594,7 +612,7 @@ ApplicationWindow {
                     }
                 }
 
-                onClicked: helpPage.helpPagePressed()
+                onClicked: { helpPage.helpPagePressed(); focused = false }
             }
         }
     
@@ -624,10 +642,8 @@ ApplicationWindow {
         }
     }
     
-    HelpPage {
-        id: helpPage
-    }
-
+    HelpPage { id: helpPage }
+    SettingsPage { id: settingsPage }
 
     FileDialog {
         id: uploadFileDialog

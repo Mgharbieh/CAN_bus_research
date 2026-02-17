@@ -10,9 +10,9 @@ Item {
 
     Rectangle {
         id: issueTitleBar
-        color: accent1color
+        color: colorWay.accent1color
         x: scrollRef ? scrollRef.contentItem.contentX : 0
-        width: scrollRef ? scrollRef.availableWidth - 12: parent.availableWidth
+        width: scrollRef ? scrollRef.availableWidth - 12 : parent.availableWidth
         height: 40
         radius: 10
 
@@ -43,14 +43,15 @@ Item {
             left: parent.left
             leftMargin: 10
         }
-
+        topPadding: 3
+        
         text: ""
-        color: textColor
+        color: colorWay.textColor
         font.pixelSize: 25
         readOnly: true
         wrapMode: TextEdit.NoWrap
         background: Rectangle {
-            color: backgroundcolor2
+            color: colorWay.backgroundcolor2
             radius: 15
         }
     }

@@ -1,10 +1,12 @@
 import sys
+import ctypes
 import IssueChecker 
 import fileHandler
 
 from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
 from PyQt6.QtQml import QQmlApplicationEngine
-from PyQt6.QtGui import QGuiApplication
+from PyQt6.QtGui import QGuiApplication, QIcon
+from PySide6.QtQuickControls2 import QQuickStyle
 
 class WorkerSignals(QObject):
     analysisResult = pyqtSignal(int)
@@ -54,12 +56,22 @@ class AnalysisInterface(QObject):
     fileProcessed = pyqtSignal(int)
     fileLoaded = pyqtSignal(list, str)
     populateSavedFiles = pyqtSignal(str)
+    configFileLoaded = pyqtSignal(int, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.fileManager = fileHandler.FileHandler()
         self.checker = IssueChecker.IssueChecker()
         self.threadPool = QThreadPool()
+
+    def loadConfiguration(self):
+        config = self.fileManager.loadConfig()
+        if config:
+            self.configFileLoaded.emit(config["theme"], config["highContrast"])
+            # Load other configuration settings as needed
+
+    def updateConfiguration(self, key, value):
+        self.fileManager.updateConfig(key, value)
 
     def populateSavedFileList(self):
         saved_files = self.fileManager.loadPreviousScans()
@@ -77,9 +89,14 @@ class AnalysisInterface(QObject):
         self.threadPool.start(worker)
 
 
+myappid = 'statican.gui.v1' 
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 app = QGuiApplication(sys.argv)
 interface = AnalysisInterface()
 
+app.setWindowIcon(QIcon("./ui/assets/statican.ico"))
+
+QQuickStyle.setStyle("Material")
 engine = QQmlApplicationEngine()
 engine.rootContext().setContextProperty('ISSUE_CHECKER', interface)
 engine.quit.connect(app.quit)
@@ -87,10 +104,11 @@ engine.load('./ui/Main.qml')
 if not engine.rootObjects():
     sys.exit(-1)
 
+interface.loadConfiguration()
 interface.populateSavedFileList()
 root_object = engine.rootObjects()[0]
 root_object.scanFile.connect(interface.analyzeFile)
-root_object.loadSelectedFile.connect(interface.loadFile)
-
+root_object.loadSelectedFile.connect(interface.loadFile)  
+root_object.configUpdated.connect(interface.updateConfiguration)
 
 sys.exit(app.exec())

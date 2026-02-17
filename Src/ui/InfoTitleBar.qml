@@ -6,7 +6,7 @@ Rectangle {
     id: titleBar
     height: 30
     width: parent.width
-    color: backgroundcolor 
+    color: colorWay.backgroundcolor 
     radius: 15
     clip: true
 
@@ -14,7 +14,7 @@ Rectangle {
         id: titleText
         text: ""
         font.pixelSize: 20
-        color: textColor
+        color: colorWay.textColor
 
         anchors {
             top: parent.top
@@ -35,7 +35,7 @@ Rectangle {
 
         width: 30
         radius: 15
-        color: backgroundcolor
+        color: colorWay.backgroundcolor
 
         Rectangle {
             width: parent.radius
@@ -72,7 +72,7 @@ Rectangle {
             text: "✕"
             font.pixelSize: 20
             anchors.centerIn: parent
-            color: textColor
+            color: colorWay.textColor
         }
 
         MouseArea {
@@ -80,8 +80,8 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
         
-            onEntered: closeButtonRect.color = "#FF0000"
-            onExited: closeButtonRect.color = backgroundcolor 
+            onEntered: { closeButtonRect.color = "#FF0000"; closeButtonText.color = "#FFFFFF" }
+            onExited: { closeButtonRect.color = colorWay.backgroundcolor; closeButtonText.color = colorWay.textColor }
             onClicked: {
                 windowRoot.close()
                 windowRoot.destroy()
@@ -99,14 +99,14 @@ Rectangle {
         }
 
         width: 30
-        color: backgroundcolor
+        color: colorWay.backgroundcolor
 
         Text {
             id: maximizeButtonText
             text: windowRoot.visibility === Window.FullScreen ? "🗗" : "🗖"
             font.pixelSize: 15
             anchors.centerIn: parent
-            color: textColor
+            color: colorWay.textColor
         }
 
         MouseArea {
@@ -114,8 +114,8 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
 
-            onEntered: maximizeButtonRect.color = backgroundcolor2
-            onExited: maximizeButtonRect.color = backgroundcolor
+            onEntered: maximizeButtonRect.color = colorWay.itemColor
+            onExited: maximizeButtonRect.color = colorWay.backgroundcolor
             onClicked: windowRoot.visibility === Window.FullScreen ? windowRoot.visibility = Window.Windowed : windowRoot.visibility = Window.FullScreen
         }
     }
@@ -129,14 +129,14 @@ Rectangle {
         }
 
         width: 30
-        color: backgroundcolor
+        color: colorWay.backgroundcolor
 
         Text {
             id: minimizeButtonText
             text: "—"
             font.pixelSize: 15
             anchors.centerIn: parent
-            color: textColor
+            color: colorWay.textColor
         }
 
         MouseArea {
@@ -144,8 +144,8 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
 
-            onEntered: minimizeButtonRect.color = backgroundcolor2
-            onExited: minimizeButtonRect.color = backgroundcolor
+            onEntered: minimizeButtonRect.color = colorWay.itemColor
+            onExited: minimizeButtonRect.color = colorWay.backgroundcolor
             onClicked: windowRoot.showMinimized()
         }
     }

@@ -24,23 +24,36 @@ Item {
 
     Rectangle {
         id: helpPageRect
-        /*
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            left: parent.left
-        }
-        */
-        
         height: parent.height
         width: 0.5 * parent.width
-        color: backgroundcolor2
+        color: colorWay.backgroundcolor2
         x: parent.x
+        radius: 15
         z:3
+
+         Rectangle {
+            anchors {
+                top: parent.top
+                right: parent.right
+            }
+            width: parent.radius
+            height: parent.radius
+            color: colorWay.backgroundcolor2
+        }
+
+        Rectangle {
+            anchors {
+                bottom: parent.bottom
+                right: parent.right
+            }
+            width: parent.radius
+            height: parent.radius
+            color: colorWay.backgroundcolor2
+        }
 
         Rectangle {
             id: helpTitleBar
-            color: accent1color
+            color: colorWay.accent1color
             anchors {
                 top: parent.top
                 left: parent.left
@@ -68,7 +81,7 @@ Item {
                     id: closeButtonText
                     anchors.fill: parent
                     text: "←"
-                    color: textColor 
+                    color: "#FFFFFF" 
                     styleColor: "#FFFFFF"
                     font.pixelSize: 50
                     font.bold: true
@@ -85,7 +98,7 @@ Item {
                         //closeButtonText.style = Text.Sunken
                     } 
                     onExited: {
-                        closeButtonText.color = textColor 
+                        closeButtonText.color = "#FFFFFF" 
                         //closeButtonText.style = Text.Normal
                     } 
                     //onClicked: helpRoot.visible = false
@@ -122,6 +135,195 @@ Item {
                 }
             }
         }
+
+        Rectangle {
+            id: helpPageBody
+            anchors {
+                top: helpTitleBar.bottom
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+                margins: 4
+            }
+            color: "transparent"
+
+            Column {
+                id: helpColumn
+                anchors.fill: parent
+                spacing: 4
+                topPadding: 5
+
+                Rectangle {
+                    width: parent.width
+                    height: 40
+                    color: "transparent"
+
+                    Text {
+                        id: howToUseTitle
+                        anchors.fill: parent
+                        text: "How to Use"                        
+                        color: colorWay.textColor
+                        font.pixelSize: 35
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: howToUseText1.contentHeight
+                    color: "transparent"
+
+                    Text {
+                        id: dash1
+                        anchors {
+                            left: parent.left
+                            //top: howToUseTitle.bottom
+                            leftMargin: 4
+                            //topMargin: 4
+                        }
+                        text: "-"
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        id: howToUseText1
+                        anchors {
+                            left: dash1.right
+                            leftMargin: 2
+                            //top: howToUseTitle.bottom
+                            //topMargin: 4
+                        }
+                        width: parent.width - dash1.width
+                        text: "Select 'upload file' to open the file browser"
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: howToUseText2.contentHeight
+                    color: "transparent"
+
+                    Text {
+                        id: dash2
+                        anchors {
+                            left: parent.left
+                            //top: howToUseText1.bottom
+                            leftMargin: 4
+                            //topMargin: 2
+                        }
+                        text: "-"
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        id: howToUseText2
+                        anchors {
+                            left: dash2.right
+                            leftMargin: 2
+                            //top: howToUseText1.bottom
+                            //topMargin: 2
+                        }
+                        width: parent.width - dash2.width
+                        text: "Select Arduino (.ino) source code file"
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: howToUseText3.contentHeight
+                    color: "transparent"
+
+                    Text {
+                        id: dash3
+                        anchors {
+                            left: parent.left
+                            //top: howToUseText2.bottom
+                            leftMargin: 4
+                            //topMargin: 2
+                        }
+                        text: "-"
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        id: howToUseText3
+                        anchors {
+                            left: dash3.right
+                            leftMargin: 2
+                            //top: howToUseText2.bottom
+                            //topMargin: 2
+                        }
+                        width: parent.width - dash3.width
+                        text: "Wait for file analysis to complete on the newly appeared card"
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: howToUseText4.contentHeight
+                    color: "transparent"
+
+                    Text {
+                        id: dash4
+                        anchors {
+                            left: parent.left
+                            //top: howToUseText2.bottom
+                            leftMargin: 4
+                            //topMargin: 2
+                        }
+                        text: "-"
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        id: howToUseText4
+                        anchors {
+                            left: dash4.right
+                            leftMargin: 2
+                        }
+                        width: parent.width - dash4.width
+                        text: "Click on the card to view file information and analysis results" 
+                        color: colorWay.textColor
+                        font.pixelSize: 20
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+            }
+        }
     }
 
     Rectangle {
@@ -132,7 +334,7 @@ Item {
             bottom: parent.bottom
             right: parent.right
         }
-        color: '#808b8b8b' //save as focusColor
+        color: colorWay.focusColor 
         visible: false
         radius: 15
     }
@@ -142,10 +344,9 @@ Item {
         target: helpPageRect
         property: "x"
         to: 0
-        duration: 200
+        duration: 150
 
         onStarted: focusEmphasis.visible = true
-        //onFinished: focusEmphasis.visible = true
     }
 
     PropertyAnimation {
@@ -153,7 +354,7 @@ Item {
         target: helpPageRect
         property: "x"
         to: -1 * helpPageRect.width
-        duration: 200
+        duration: 150
 
         onStarted: focusEmphasis.visible = false
         onFinished: helpRoot.visible = false
@@ -168,6 +369,7 @@ Item {
         } else {
             helpPageSlideOut.running = true
             viewing = false
+            root.focused = true
         }
     }
 }

@@ -6,7 +6,7 @@ Rectangle {
     id: titleBar
     height: 30
     width: parent.width
-    color: backgroundcolor // Custom color
+    color: colorWay.backgroundcolor // Custom color
     radius: 15
     clip: true
 
@@ -20,7 +20,7 @@ Rectangle {
 
         width: 30
         radius: 15
-        color: backgroundcolor
+        color: colorWay.backgroundcolor
 
         Rectangle {
             width: parent.radius
@@ -57,7 +57,7 @@ Rectangle {
             text: "✕"
             font.pixelSize: 20
             anchors.centerIn: parent
-            color: "#FFFFFF"
+            color: colorWay.textColor
         }
 
         MouseArea {
@@ -65,11 +65,10 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
         
-            onEntered: closeButtonRect.color = "#FF0000"
-            onExited: closeButtonRect.color = backgroundcolor 
+            onEntered: { closeButtonRect.color = "#FF0000"; closeButtonText.color = "#FFFFFF" }
+            onExited: { closeButtonRect.color = colorWay.backgroundcolor; closeButtonText.color = colorWay.textColor }
             onClicked: root.close()
         }
-    
     }
 
     Rectangle {
@@ -81,14 +80,14 @@ Rectangle {
         }
 
         width: 30
-        color: backgroundcolor
+        color: colorWay.backgroundcolor
 
         Text {
             id: minimizeButtonText
             text: "—"
             font.pixelSize: 15
             anchors.centerIn: parent
-            color: "#FFFFFF"
+            color: colorWay.textColor
         }
 
         MouseArea {
@@ -96,8 +95,8 @@ Rectangle {
             anchors.fill: parent
             hoverEnabled: true
 
-            onEntered: minimizeButtonRect.color = backgroundcolor2
-            onExited: minimizeButtonRect.color = backgroundcolor
+            onEntered: minimizeButtonRect.color = colorWay.backgroundcolor2
+            onExited: minimizeButtonRect.color = colorWay.backgroundcolor
             onClicked: root.showMinimized()
         }
 }
