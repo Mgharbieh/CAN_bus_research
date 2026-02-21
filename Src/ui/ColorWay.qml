@@ -37,7 +37,11 @@ Item {
     property string separatorColor: colorMode.separatorColor
 
     function switchColorMode(mode) {
-        if(mode === 1) { colorMode = darkMode }
-        else if(mode === 0) { colorMode = lightMode }
+        if(mode === 1) {
+            colorMode = darkMode 
+        }
+        else if(mode === 0) { 
+            colorMode = lightMode
+        }
     }
 }

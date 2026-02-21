@@ -20,7 +20,7 @@ Rectangle {
 
         width: 30
         radius: 15
-        color: colorWay.backgroundcolor
+        color: mouseArea.containsMouse ? "#FF0000" : colorWay.backgroundcolor
 
         Rectangle {
             width: parent.radius
@@ -57,16 +57,13 @@ Rectangle {
             text: "✕"
             font.pixelSize: 20
             anchors.centerIn: parent
-            color: colorWay.textColor
+            color: mouseArea.containsMouse ? "#FFFFFF" : colorWay.textColor
         }
 
         MouseArea {
             id: mouseArea
             anchors.fill: parent
             hoverEnabled: true
-        
-            onEntered: { closeButtonRect.color = "#FF0000"; closeButtonText.color = "#FFFFFF" }
-            onExited: { closeButtonRect.color = colorWay.backgroundcolor; closeButtonText.color = colorWay.textColor }
             onClicked: root.close()
         }
     }
@@ -80,7 +77,7 @@ Rectangle {
         }
 
         width: 30
-        color: colorWay.backgroundcolor
+        color: mouseArea2.containsMouse ? colorWay.backgroundcolor2 : colorWay.backgroundcolor
 
         Text {
             id: minimizeButtonText
@@ -94,9 +91,6 @@ Rectangle {
             id: mouseArea2
             anchors.fill: parent
             hoverEnabled: true
-
-            onEntered: minimizeButtonRect.color = colorWay.backgroundcolor2
-            onExited: minimizeButtonRect.color = colorWay.backgroundcolor
             onClicked: root.showMinimized()
         }
 }

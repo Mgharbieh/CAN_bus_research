@@ -63,7 +63,6 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
         file_path = self.save_dir / name
         return os.path.exists(file_path)
 
-
     def load_file(self, name):
         try:
             path = self.save_dir / (name[:-4] + '_ino.json')
@@ -85,4 +84,28 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
             return True
         except Exception as e:
             print(f"Error saving file: {e}")
+            return False
+        
+    def delete_file(self, name):
+        path = self.save_dir / (name[:-4] + '_ino.json')
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+                return True
+            else:
+                print(f"File {path} does not exist.")
+                return False
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+            return False
+        
+    def delete_all_files(self):
+        try:
+            for file_name in os.listdir(self.save_dir):
+                file_path = self.save_dir / file_name
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            return True
+        except Exception as e:
+            print(f"Error deleting all files: {e}")
             return False

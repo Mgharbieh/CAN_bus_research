@@ -95,14 +95,16 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     onEntered: {
                         closeButtonText.color = '#adadad' 
-                        //closeButtonText.style = Text.Sunken
                     } 
                     onExited: {
                         closeButtonText.color = "#FFFFFF"
-                        //closeButtonText.style = Text.Normal
                     } 
-                    //onClicked: helpRoot.visible = false
-                    onClicked: settingsPagePressed()
+                    onClicked: {
+                        settingsPagePressed()
+                        cancelDeleteRect.visible = false
+                        confirmDeleteRect.visible = false
+                        deleteButton.visible = true
+                    }
                 } 
             }
     
@@ -247,7 +249,178 @@ Item {
                             root.configUpdated("contrast", highContrastSelect.currentIndex)
                         }
                     }      
-            }
+                }
+
+                Rectangle {
+                    anchors {
+                        left:parent.left
+                        right:parent.right
+                        margins: 2
+                    }
+                    height: 3
+                    radius: 3
+                    color: colorWay.separatorColor
+                }
+
+                Rectangle {
+                    id: deleteAllFilesRect
+                    width: parent.width
+                    anchors.left: parent.left
+                    anchors.leftMargin: 5
+                    height: 40
+                    color: "transparent"
+
+                    Text {
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            bottom: parent.bottom
+                            margins: 5
+                        }
+                        text: "Delete all Files"
+                        color: colorWay.textColor
+                        minimumPixelSize: 12
+                        font.pixelSize: 20
+                        fontSizeMode: Text.Fit
+                        verticalAlignment: Text.AlignVCenter 
+                    }
+
+                    Rectangle {
+                        id: deleteButton
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                            bottom: parent.bottom
+                            margins: 5
+                        }
+                        radius: 5
+                        width: 120
+                        border.width: 1
+                        border.color: "#FF0000"
+                        color: {
+                            if(dataCount > 0 && mouseArea.containsMouse) {
+                                "#FF0000" 
+                            }
+                            else if(dataCount === 0 &&  mouseArea.containsMouse) {
+                                colorWay.backgroundcolor
+                            }
+                            else {
+                                colorWay.backgroundcolor2
+                            }
+                        } 
+                        //mouseArea.containsMouse ? "#FF0000" : colorWay.backgroundcolor 
+                        visible: true
+
+                        Text {
+                            anchors.fill: parent
+                            text: "Delete"
+                            color: mouseArea.containsMouse ? "#FFFFFF" : "#FF0000"
+                            minimumPixelSize: 12
+                            font.pixelSize: 20
+                            fontSizeMode: Text.Fit
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter 
+                        }
+
+                        MouseArea {
+                            id: mouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: root.dataCount === 0 ? cursorShape = Qt.ForbiddenCursor : cursorShape = Qt.PointingHandCursor
+                            onExited: cursorShape = Qt.ArrowCursor
+                            onClicked: {
+                                if(root.dataCount > 0) {
+                                    deleteButton.visible = false
+                                    cancelDeleteRect.visible = true
+                                    confirmDeleteRect.visible = true
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: cancelDeleteRect
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                            bottom: parent.bottom
+                            margins: 5
+                        }
+                        radius: 5
+                        width: 70
+                        border.width: 1
+                        border.color: colorWay.textColor
+                        color: colorWay.backgroundcolor
+                        visible: false
+
+                        Text {
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            text: "Cancel"
+                            color: colorWay.textColor
+                            minimumPixelSize: 12
+                            font.pixelSize: 20
+                            fontSizeMode: Text.Fit
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter 
+                        }
+
+                        MouseArea {
+                            id: mouseArea2
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: cursorShape = Qt.PointingHandCursor
+                            onExited: cursorShape = Qt.ArrowCursor
+                            onClicked: {
+                                cancelDeleteRect.visible = false
+                                confirmDeleteRect.visible = false
+                                deleteButton.visible = true
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: confirmDeleteRect
+                        anchors {
+                            top: parent.top
+                            right: cancelDeleteRect.left
+                            bottom: parent.bottom
+                            margins: 5
+                        }
+                        radius: 5
+                        width: 70
+                        border.width: 1
+                        border.color: "#FF0000"
+                        color: mouseArea3.containsMouse ? "#FF0000" : colorWay.backgroundcolor
+                        visible: false
+
+                        Text {
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            text: "Confirm"
+                            color: mouseArea3.containsMouse ? "#FFFFFF" : "#FF0000"
+                            minimumPixelSize: 12
+                            font.pixelSize: 20
+                            fontSizeMode: Text.Fit
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter 
+                        }
+
+                        MouseArea {
+                            id: mouseArea3
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: cursorShape = Qt.PointingHandCursor
+                            onExited: cursorShape = Qt.ArrowCursor
+                            onClicked: {
+                                root.deleteAllFileInterface()
+                                cancelDeleteRect.visible = false
+                                confirmDeleteRect.visible = false
+                                deleteButton.visible = true
+                            }
+                        }
+                    }
+                }
 
                 Rectangle {
                     anchors {
@@ -262,7 +435,6 @@ Item {
             }
         } 
     }
-
 
     Rectangle {
         id: focusEmphasis

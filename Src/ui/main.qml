@@ -14,6 +14,7 @@ ApplicationWindow {
     property bool scanInProgress: false
     property int itemBeingScanned: -1
     property int itemSelected: -1
+    property int itemDeleted: -1
     property string path_to_file: ""
     property bool focused: true
 
@@ -27,6 +28,8 @@ ApplicationWindow {
     signal scanFile(string path)
     signal loadSelectedFile(string name)
     signal configUpdated(string key, var val)
+    signal deleteFile(string path)
+    signal deleteAllFiles()
     
     title: "StatiCAN"
     flags: Qt.Window | Qt.FramelessWindowHint
@@ -68,6 +71,24 @@ ApplicationWindow {
         function onConfigFileLoaded(theme, contrast) {
             settingsPage.init(theme, contrast)
         }
+
+        function onFileDeleted(name) {
+            if(name !== "allDeleted") {
+                if(savedModel.get(itemDeleted).file_name === name) {
+                    savedModel.remove(itemDeleted)
+                }
+            }
+            else if(name === "allDeleted") {
+                savedModel.clear()
+            }
+            
+            
+        }
+    }
+
+    property alias dataCount: savedModel.count
+    ListModel {
+        id: savedModel
     }
 
     Rectangle {
@@ -197,10 +218,6 @@ ApplicationWindow {
                     }
                 }
 
-                ListModel {
-                    id: savedModel
-                }
-
                 ListView {
                     id: savedList
                     anchors.fill: parent
@@ -296,9 +313,58 @@ ApplicationWindow {
                                 color:  "#969696" 
                             }
 
+                            Rectangle {
+                                id: deleteItemRect
+                                anchors {
+                                    top: parent.top
+                                    right:parent.right
+                                    bottom: parent.bottom
+                                    margins: 5
+                                }
+                                width: 66
+                                color: "transparent"
+
+                                Rectangle {
+                                    id: deleteIconBackground
+                                    anchors.centerIn:parent
+                                    width: 62
+                                    height: 62
+                                    color: deleteMouseArea.containsMouse ? "#FF0000" : textColor
+
+                                    MouseArea {
+                                        id: deleteMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+
+                                        onEntered: cursorShape = Qt.PointingHandCursor
+                                        onExited: cursorShape = Qt.ArrowCursor
+                                        onClicked: {
+                                            itemDeleted = index
+                                            deleteFile(savedModel.get(itemDeleted).file_name)
+                                        } 
+                                    }
+                                }
+
+                                Image {
+                                    id: deleteIconImage
+                                    anchors.centerIn: parent
+                                    width: 64
+                                    height: 64
+                                    mipmap: true
+                                    source: (colorWay.colorMode === colorWay.lightMode) ? "./assets/delete-light.png" : "./assets/delete-dark.png"
+                                }
+
+                            }
+
                             Button {
                                 id: accessElement
-                                anchors.fill: parent
+                                anchors {
+                                    top: parent.top
+                                    bottom: parent.bottom
+                                    left: parent.left
+                                    right: deleteItemRect.left
+                                    rightMargin: 1
+                                }
                                 flat: true
                                 enabled: focused
 
@@ -694,20 +760,9 @@ ApplicationWindow {
             fileInfoWindow.requestActivate();
             loadingWindow = false
         }
-        //Qt.application.restoreOverrideCursor()
     }
 
-    // NOT CONNECTED TO ANYTHING YET //
-    function switchColorMode() {
-        if(backgroundcolor == "#FFFFFF") {
-            backgroundcolor = "#141414"
-            backgroundcolor2 = "#242424"
-            textColor = "#FFFFFF"
-        }
-        else {
-            backgroundcolor = "#FFFFFF"
-            backgroundcolor2 = "#D0D0D0"
-            textColor = "#000000"
-        }
+    function deleteAllFileInterface() {
+        deleteAllFiles()
     }
 }

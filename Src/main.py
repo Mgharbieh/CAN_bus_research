@@ -11,6 +11,7 @@ from PySide6.QtQuickControls2 import QQuickStyle
 class WorkerSignals(QObject):
     analysisResult = pyqtSignal(int)
     fileResult = pyqtSignal(list, str)
+    deleteResult = pyqtSignal(str)
 
 class AnalysisWorker(QRunnable):
     def __init__(self, checker, fileManager, path):
@@ -50,6 +51,34 @@ class LoaderWorker(QRunnable):
         except Exception as e:
             print(f"Error in worker: {e}")
 
+class DeleteWorker(QRunnable):
+    def __init__(self, fileManager, fileName):
+        super().__init__()
+        self.fileManager = fileManager
+        self.name = fileName
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            if self.fileManager.delete_file(self.name):
+                self.signals.deleteResult.emit(self.name)
+        except Exception as e:
+            print(f"Error in worker: {e}")
+
+class DeleteAllWorker(QRunnable):
+    def __init__(self, fileManager):
+        super().__init__()
+        self.fileManager = fileManager
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            if self.fileManager.delete_all_files():
+                self.signals.deleteResult.emit("allDeleted")
+        except Exception as e:
+            print(f"Error in worker: {e}")
 
 class AnalysisInterface(QObject):
 
@@ -57,6 +86,7 @@ class AnalysisInterface(QObject):
     fileLoaded = pyqtSignal(list, str)
     populateSavedFiles = pyqtSignal(str)
     configFileLoaded = pyqtSignal(int, int)
+    fileDeleted = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -88,6 +118,15 @@ class AnalysisInterface(QObject):
         worker.signals.fileResult.connect(self.fileLoaded.emit)
         self.threadPool.start(worker)
 
+    def deleteFile(self, name):
+        worker = DeleteWorker(self.fileManager, name)
+        worker.signals.deleteResult.connect(self.fileDeleted.emit)
+        self.threadPool.start(worker)
+    
+    def deleteAllFiles(self):
+        worker = DeleteAllWorker(self.fileManager)
+        worker.signals.deleteResult.connect(self.fileDeleted.emit)
+        self.threadPool.start(worker)
 
 myappid = 'statican.gui.v1' 
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
@@ -110,5 +149,7 @@ root_object = engine.rootObjects()[0]
 root_object.scanFile.connect(interface.analyzeFile)
 root_object.loadSelectedFile.connect(interface.loadFile)  
 root_object.configUpdated.connect(interface.updateConfiguration)
+root_object.deleteFile.connect(interface.deleteFile)
+root_object.deleteAllFiles.connect(interface.deleteAllFiles)
 
 sys.exit(app.exec())
