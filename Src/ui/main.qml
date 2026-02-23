@@ -30,6 +30,7 @@ ApplicationWindow {
     signal configUpdated(string key, var val)
     signal deleteFile(string path)
     signal deleteAllFiles()
+    signal storeAPIKey(string keyName, string key)
     
     title: "StatiCAN"
     flags: Qt.Window | Qt.FramelessWindowHint
@@ -68,8 +69,8 @@ ApplicationWindow {
             }) 
         }
 
-        function onConfigFileLoaded(theme, contrast) {
-            settingsPage.init(theme, contrast)
+        function onConfigFileLoaded(theme, contrast, agent, key) {
+            settingsPage.init(theme, contrast, agent, key)
         }
 
         function onFileDeleted(name) {
@@ -125,7 +126,7 @@ ApplicationWindow {
 
             Text {
                 id: text1
-                color: "#18458b"
+                color: accent1color
                 text: qsTr("Stati")
                 anchors.fill: parent
                 font.pixelSize: 40
@@ -145,13 +146,13 @@ ApplicationWindow {
 
             width: 95
             height: 55
-            color: "#18458b"
+            color: accent1color
             radius: 10
             border.width: 0
 
             Text {
                 id: can_txt
-                color: "#ffffff"
+                color: colorWay.titleTextColor
                 text: qsTr("CAN")
                 anchors.fill: parent
                 font.pixelSize: 40
@@ -245,7 +246,11 @@ ApplicationWindow {
                                 fill: parent
                                 margins: 8
                             }
-
+                            border.color: accent1color
+                            border.width: {
+                                if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                                else {0}
+                            }
                             color: backgroundcolor2
                             radius: 10
 
@@ -308,9 +313,8 @@ ApplicationWindow {
                                     else if(issues === 1 ) {"1 issue found"}
                                     else (issues + " issues found")
                                 }
-                                
                                 font.pixelSize: 26
-                                color:  "#969696" 
+                                color:  colorWay.secondaryTextColor
                             }
 
                             Rectangle {
@@ -351,7 +355,7 @@ ApplicationWindow {
                                     width: 64
                                     height: 64
                                     mipmap: true
-                                    source: (colorWay.colorMode === colorWay.lightMode) ? "./assets/delete-light.png" : "./assets/delete-dark.png"
+                                    source: colorWay.deleteIconSrc //(colorWay.colorMode === colorWay.lightMode) ? "./assets/delete-light.png" : "./assets/delete-dark.png"
                                 }
 
                             }
@@ -421,8 +425,8 @@ ApplicationWindow {
             radius: 5
             z:3
             gradient: Gradient {
-                GradientStop { position: 0.0; color:  '#80000000' } 
-                GradientStop { position: 1.0; color:  '#00000000' }
+                GradientStop { position: 0.0; color:  colorWay.gradientColor1 } 
+                GradientStop { position: 1.0; color:  colorWay.gradientColor2 }
             }
             visible: savedList.atYBeginning === true ? false : true
         }
@@ -439,8 +443,8 @@ ApplicationWindow {
             radius: 5
             z:3
             gradient: Gradient {
-                GradientStop { position: 0.0; color:  '#00000000' } // Start color at the top (0.0)
-                GradientStop { position: 1.0; color:  '#80000000' }
+                GradientStop { position: 0.0; color:  colorWay.gradientColor2 } // Start color at the top (0.0)
+                GradientStop { position: 1.0; color:  colorWay.gradientColor1 }
             }
             visible: savedList.atYEnd === true ? false : true
         }
@@ -458,7 +462,7 @@ ApplicationWindow {
 
         Rectangle {
             id: upload_file_rect
-            color: "#18458b"
+            color: accent1color
             radius: 20
 
             anchors {
@@ -516,7 +520,7 @@ ApplicationWindow {
                 id: rectangle4
                 width: 10
                 height: 60
-                color: "#ffffff"
+                color: colorWay.titleTextColor
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
             }
@@ -525,7 +529,7 @@ ApplicationWindow {
                 id: rectangle5
                 width: 10
                 height: 60
-                color: "#ffffff"
+                color: colorWay.titleTextColor
                 anchors.verticalCenter: parent.verticalCenter
                 rotation: 90
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -546,7 +550,7 @@ ApplicationWindow {
         Rectangle {
             id: settings_rect
             height: 90
-            color: "#18458b"
+            color: accent1color
             radius: 20
 
             anchors {
@@ -562,7 +566,7 @@ ApplicationWindow {
             Image {
                 id: settings_img
                 anchors.centerIn: parent
-                source: "./assets/settings_edit.png"
+                source: colorWay.colorMode === colorWay.darkModeHC ? "./assets/settings_edit_darkHC.png" : "./assets/settings_edit.png"
             }
             
             Button {
@@ -613,7 +617,7 @@ ApplicationWindow {
         Rectangle {
             id: help_rect
             height: 90
-            color: "#18458b"
+            color: accent1color
             radius: 20
 
             anchors {
@@ -642,7 +646,7 @@ ApplicationWindow {
                 text: "?"
                 font.pixelSize: 70
                 font.bold: true
-                color: "#FFFFFF"
+                color: colorWay.titleTextColor
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -707,7 +711,90 @@ ApplicationWindow {
             }
         }
     }
+
+    RectangularShadow {
+        anchors.fill: messageRect
+        offset.x: 5 
+        offset.y: 5 
+        radius: messageRect.radius
+        blur: 20 // Shadow softness
+        spread: 0 // Shadow size relative to source
+        color: "#80000000" // Shadow color with alpha (black, 50% opacity)
+        antialiasing: true // Smooth the edges
+    }
+
+    Rectangle {
+        property alias msgIcon: messageIcon.source
+        property alias msgColor: msgText.color
+        property alias msgContent: msgText.text
+
+        id: messageRect
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width * 0.5
+        height: 50
+        radius: 10
+        y: parent.height + 70
+        z: 10
+
+        color: backgroundcolor
+        border.width: 2
+        border.color: accent1color
+
+        Image {
+            id: messageIcon
+            anchors {
+                top: parent.top
+                bottom: parent.bottom
+                left: parent.left
+                margins: 5
+            }
+            width: 40
+            height: 40
+        }
+
+        Text {
+            id: msgText
+            anchors {
+                top:parent.top
+                bottom: parent.bottom
+                left: messageIcon.right
+                right: parent.right 
+                margins: 5
+            }
+            color: textColor
+            text: ""
+            minimumPixelSize: 12
+            font.pixelSize: 30
+            fontSizeMode: Text.Fit
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
     
+    PropertyAnimation {
+        id: messageSlideIn
+        target: messageRect
+        property: "y"
+        to: root.height - 70
+        duration: 150
+
+        onFinished: msgDisplayTimer.start()
+    }
+
+    PropertyAnimation {
+        id: messageSlideOut
+        target: messageRect
+        property: "y"
+        to: root.height + 70
+        duration: 150
+    }
+
+    Timer {
+        id: msgDisplayTimer
+        interval: 2500
+        onTriggered: messageSlideOut.start()
+    }
+
     HelpPage { id: helpPage }
     SettingsPage { id: settingsPage }
 
@@ -762,7 +849,9 @@ ApplicationWindow {
         }
     }
 
-    function deleteAllFileInterface() {
-        deleteAllFiles()
+    function showMessage(icon, textContent) {
+        messageRect.msgIcon = icon
+        messageRect.msgContent = textContent
+        messageSlideIn.start()
     }
 }

@@ -3,9 +3,10 @@ import ctypes
 import IssueChecker 
 import fileHandler
 
-from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot, QRunnable, QThreadPool
+from PyQt6.QtCore import Qt, QObject, QUrl, pyqtSignal, pyqtSlot, QRunnable, QThreadPool 
 from PyQt6.QtQml import QQmlApplicationEngine
 from PyQt6.QtGui import QGuiApplication, QIcon
+from PyQt6.QtQuick import QQuickView
 from PySide6.QtQuickControls2 import QQuickStyle
 
 class WorkerSignals(QObject):
@@ -85,7 +86,7 @@ class AnalysisInterface(QObject):
     fileProcessed = pyqtSignal(int)
     fileLoaded = pyqtSignal(list, str)
     populateSavedFiles = pyqtSignal(str)
-    configFileLoaded = pyqtSignal(int, int)
+    configFileLoaded = pyqtSignal(int, int, int, str)
     fileDeleted = pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -95,13 +96,16 @@ class AnalysisInterface(QObject):
         self.threadPool = QThreadPool()
 
     def loadConfiguration(self):
-        config = self.fileManager.loadConfig()
+        config, apiKey = self.fileManager.loadConfig()
         if config:
-            self.configFileLoaded.emit(config["theme"], config["highContrast"])
+            self.configFileLoaded.emit(config["theme"], config["highContrast"], config["aiAgent"], apiKey)
             # Load other configuration settings as needed
 
     def updateConfiguration(self, key, value):
         self.fileManager.updateConfig(key, value)
+
+    def saveAPIKey(self, agent, key):
+        self.fileManager.update_api_key(agent, key)
 
     def populateSavedFileList(self):
         saved_files = self.fileManager.loadPreviousScans()
@@ -128,12 +132,17 @@ class AnalysisInterface(QObject):
         worker.signals.deleteResult.connect(self.fileDeleted.emit)
         self.threadPool.start(worker)
 
+app = QGuiApplication(sys.argv)
+splash = QQuickView(QUrl.fromLocalFile("./ui/SplashScreen.qml"))
+splash.setFlags(Qt.WindowType.SplashScreen | Qt.WindowType.WindowStaysOnTopHint)
+splash.setColor(Qt.GlobalColor.transparent)
+splash.show()
+app.processEvents()
+
 myappid = 'statican.gui.v1' 
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-app = QGuiApplication(sys.argv)
-interface = AnalysisInterface()
-
 app.setWindowIcon(QIcon("./ui/assets/statican.ico"))
+interface = AnalysisInterface()
 
 QQuickStyle.setStyle("Material")
 engine = QQmlApplicationEngine()
@@ -151,5 +160,7 @@ root_object.loadSelectedFile.connect(interface.loadFile)
 root_object.configUpdated.connect(interface.updateConfiguration)
 root_object.deleteFile.connect(interface.deleteFile)
 root_object.deleteAllFiles.connect(interface.deleteAllFiles)
-
+root_object.storeAPIKey.connect(interface.saveAPIKey)
+ 
+splash.close()
 sys.exit(app.exec())

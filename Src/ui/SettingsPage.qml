@@ -5,6 +5,8 @@ import QtQuick.Layouts 6.10
 
 Item {
     property bool viewing: false
+    property bool keyRequired: false
+    property int keyLength: 0
 
     id: settingsRoot
     width: parent.width
@@ -100,10 +102,23 @@ Item {
                         closeButtonText.color = "#FFFFFF"
                     } 
                     onClicked: {
-                        settingsPagePressed()
-                        cancelDeleteRect.visible = false
-                        confirmDeleteRect.visible = false
-                        deleteButton.visible = true
+                        if(keyRequired === true) {
+                            if(keyLength === 0) {
+                                root.showMessage("./assets/WARN.png", "API key cannot be empty")
+                            }
+                            else {
+                                settingsPagePressed()
+                                cancelDeleteRect.visible = false
+                                confirmDeleteRect.visible = false
+                                deleteButton.visible = true
+                            }
+                        }
+                        else {
+                            settingsPagePressed()
+                            cancelDeleteRect.visible = false
+                            confirmDeleteRect.visible = false
+                            deleteButton.visible = true
+                        }
                     }
                 } 
             }
@@ -128,7 +143,7 @@ Item {
                         margins: 5
                     }
                     text: "Settings"
-                    color: "#FFFFFF" //change to titleTextColor variable later
+                    color: colorWay.titleTextColor
                     font.pixelSize: 30
                     fontSizeMode: Text.Fit
                     font.bold: true
@@ -192,7 +207,7 @@ Item {
                         editable: false
                         onActivated: { 
                             displayText = currentText
-                            colorWay.switchColorMode(lightDarkModeSelect.currentIndex) 
+                            colorWay.changeTheme(lightDarkModeSelect.currentIndex, highContrastSelect.currentIndex)
                             root.configUpdated("theme", lightDarkModeSelect.currentIndex)
                         }
                     }
@@ -246,7 +261,9 @@ Item {
                         editable: false
                         onActivated: { 
                             displayText = currentText
-                            root.configUpdated("contrast", highContrastSelect.currentIndex)
+                            colorWay.changeTheme(lightDarkModeSelect.currentIndex, highContrastSelect.currentIndex)
+                            root.configUpdated("highContrast", highContrastSelect.currentIndex)
+                            //colorWay.highContrastMode(highContrastSelect.currentIndex)
                         }
                     }      
                 }
@@ -308,7 +325,6 @@ Item {
                                 colorWay.backgroundcolor2
                             }
                         } 
-                        //mouseArea.containsMouse ? "#FF0000" : colorWay.backgroundcolor 
                         visible: true
 
                         Text {
@@ -349,15 +365,15 @@ Item {
                         radius: 5
                         width: 70
                         border.width: 1
-                        border.color: colorWay.textColor
-                        color: colorWay.backgroundcolor
+                        border.color: mouseArea2.containsMouse ? colorWay.accent1color : colorWay.textColor
+                        color: mouseArea2.containsMouse ? colorWay.accent1color : colorWay.backgroundcolor
                         visible: false
 
                         Text {
                             anchors.fill: parent
                             anchors.margins: 2
                             text: "Cancel"
-                            color: colorWay.textColor
+                            color: mouseArea2.containsMouse ? colorWay.titleTextColor : colorWay.textColor
                             minimumPixelSize: 12
                             font.pixelSize: 20
                             fontSizeMode: Text.Fit
@@ -413,7 +429,7 @@ Item {
                             onEntered: cursorShape = Qt.PointingHandCursor
                             onExited: cursorShape = Qt.ArrowCursor
                             onClicked: {
-                                root.deleteAllFileInterface()
+                                root.deleteAllFiles()
                                 cancelDeleteRect.visible = false
                                 confirmDeleteRect.visible = false
                                 deleteButton.visible = true
@@ -431,6 +447,154 @@ Item {
                     height: 3
                     radius: 3
                     color: colorWay.separatorColor
+                }
+
+                Rectangle {
+                    property alias selectedAgent: llmSelect.currentIndex
+                    id: aiAgentRect
+                    width: parent.width
+                    anchors.left: parent.left
+                    anchors.leftMargin: 5
+                    height: 40
+                    color: "transparent"
+
+                    Text {
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            bottom: parent.bottom
+                            margins: 5
+                        }
+                        text: "LLM Model"
+                        color: colorWay.textColor
+                        minimumPixelSize: 12
+                        font.pixelSize: 20
+                        fontSizeMode: Text.Fit
+                        verticalAlignment: Text.AlignVCenter 
+                    }
+
+                    CustomComboBox {
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                            bottom: parent.bottom
+                            margins: 5
+                        }
+                        id: llmSelect
+                        height: parent.height * 0.6
+                        width: 120
+                        model: ["Llama", "ChatGPT", "Claude", "Gemeni"]   //add others??
+                        editable: false
+                        onActivated: { 
+                            displayText = currentText
+                            llmSelect.currentIndex > 0 ? keyRequired = true : keyRequired = false
+                            root.configUpdated("aiAgent", llmSelect.currentIndex)
+                            apiKeyInput.text = ""
+                            root.storeAPIKey("API_KEY", "")
+                        }
+                    }      
+                }
+
+                Rectangle {
+                    anchors {
+                        left:parent.left
+                        right:parent.right
+                        margins: 2
+                    }
+                    height: 3
+                    radius: 3
+                    color: colorWay.separatorColor
+                }
+
+                Rectangle {
+                    id: aiAPIKeyRect
+                    width: parent.width
+                    anchors.left: parent.left
+                    anchors.leftMargin: 5
+                    height: 40
+                    color: "transparent"
+                    visible: llmSelect.currentIndex === 0 ? false : true
+
+                    Text {
+                        id: apiKeyInputText
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            bottom: parent.bottom
+                            margins: 5
+                        }
+                        text: "API Key: "
+                        color: colorWay.textColor
+                        minimumPixelSize: 12
+                        font.pixelSize: 20
+                        fontSizeMode: Text.Fit
+                        verticalAlignment: Text.AlignVCenter 
+                    }
+
+                    Rectangle {
+                        id: apiKeyBorder
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                            bottom: parent.bottom
+                            left: apiKeyInputText.right
+                            margins: 5
+                        } 
+                        border.width: 1
+                        border.color: colorWay.separatorColor
+                        color: "transparent"
+
+                        Text {
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                bottom: parent.bottom
+                                margins: 5
+                            }
+                            visible: apiKeyInput.length > 0 ? false : true
+                            text: "Enter API key..."
+                            color: colorWay.itemColor
+                            minimumPixelSize: 12
+                            font.pixelSize: 20
+                            fontSizeMode: Text.Fit
+                            verticalAlignment: Text.AlignVCenter 
+                        }
+
+                        TextInput {
+                            id: apiKeyInput
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                bottom: parent.bottom
+                                right: parent.right
+                                margins: 2
+                            }
+                            echoMode: TextInput.Password
+                            selectByMouse: false
+                            color: colorWay.textColor
+                            font.pixelSize: 20
+                            verticalAlignment: Text.AlignVCenter
+                            onEditingFinished: {
+                                if(apiKeyInput.length > 0) {
+                                    console.log("api key edit finished")
+                                    console.log(apiKeyInput.text)
+                                    root.storeAPIKey("API_KEY", apiKeyInput.text)    
+                                }
+                            } 
+                        } 
+                    }
+                }
+
+                Rectangle {
+                    anchors {
+                        left:parent.left
+                        right:parent.right
+                        margins: 2
+                    }
+                    height: 3
+                    radius: 3
+                    color: colorWay.separatorColor
+                    visible: aiAgentRect.selectedAgent === 0 ? false : true
                 }
             }
         } 
@@ -471,12 +635,15 @@ Item {
         onFinished: settingsRoot.visible = false
     }
 
-    function init(theme, contrast) {
+    function init(theme, contrast, agent, key) {
         lightDarkModeSelect.currentIndex = theme
         theme === 0 ? lightDarkModeSelect.displayText = "Light" :  lightDarkModeSelect.displayText = "Dark"
         highContrastSelect.currentIndex = contrast
         contrast === 0 ? highContrastSelect.displayText = "Off" :  highContrastSelect.displayText = "On"
-        colorWay.switchColorMode(theme)
+        colorWay.changeTheme(theme, contrast)
+        //colorWay.switchColorMode(theme)
+        llmSelect.currentIndex = agent
+        apiKeyInput.text = key
     }
 
     function settingsPagePressed() {

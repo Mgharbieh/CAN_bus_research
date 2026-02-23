@@ -1,6 +1,6 @@
 import os
 import json
-import shutil
+import dotenv 
 from pathlib import Path
 from platformdirs import user_documents_dir
 
@@ -11,6 +11,7 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
     def __init__(self):
         self.current_file = {}
         self.config = {}
+        self.apiKey = ""
         self.root_dir = Path(user_documents_dir()) / "StatiCAN"
         self.save_dir = self.root_dir / "Saved_Files"
         self.alreadyExistsError = AlreadyExistsError
@@ -24,14 +25,17 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
 
     def loadConfig(self):
         config_path = self.root_dir / "config.json"
+        env_path = self.root_dir / ".env"
         if os.path.exists(config_path):
+            self.apiKey = dotenv.get_key(str(env_path), "API_KEY") 
             with open(config_path, 'r') as file:
                 self.config = json.load(file)
-                return self.config
+                return self.config, self.apiKey
         else:
             self.config = {
                 "theme": 0,
-                "highContrast": 0
+                "highContrast": 0,
+                "aiAgent": 0
             }
             with open(config_path, 'w') as file:
                 json.dump(self.config, file, indent=4)
@@ -75,6 +79,11 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
         except Exception as e:
             print(f"Error loading file: {e}")
             return None
+
+    def update_api_key(self, agent, key):
+        env_path = self.root_dir / ".env"
+        success, _, self.apiKey = dotenv.set_key(str(env_path), agent, key)
+        return success
 
     def save_file(self, name, data):
         path = self.save_dir / name

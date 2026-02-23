@@ -52,6 +52,11 @@ ApplicationWindow {
                 left: parent.left
                 margins: 15
             }
+            border.color: colorWay.accent1color
+            border.width: {
+                if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                else {0}
+            }
 
             width: 0.55 * parent.width
             height: 0.55 * parent.height
@@ -213,6 +218,11 @@ ApplicationWindow {
                 right: parent.right
                 margins: 15
             }
+            border.color: accent1color
+            border.width: {
+                if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                else {0}
+            }
 
             height: 0.55 * parent.height
             radius: 10
@@ -340,6 +350,12 @@ ApplicationWindow {
                 bottom: parent.bottom
                 margins: 15
             }
+            border.color: accent1color
+            border.width: {
+                if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                else {0}
+            }
+
             color: backgroundcolor2
             radius: 15
 

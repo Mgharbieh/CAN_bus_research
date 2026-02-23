@@ -126,7 +126,7 @@ Item {
                         margins: 5
                     }
                     text: "Help"
-                    color: "#FFFFFF" //change to titleTextColor variable later
+                    color: colorWay.titleTextColor
                     font.pixelSize: 30
                     fontSizeMode: Text.Fit
                     font.bold: true

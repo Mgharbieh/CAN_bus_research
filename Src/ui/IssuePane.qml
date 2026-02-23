@@ -27,7 +27,7 @@ Item {
             }
             text: ""
             width: parent.width - 5
-            color: "#FFFFFF" //change to titleTextColor variable later
+            color: colorWay.titleTextColor
             minimumPixelSize: 10
             font.pixelSize: 30
             fontSizeMode: Text.Fit
