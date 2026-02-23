@@ -50,7 +50,7 @@ ApplicationWindow {
 
         function onFileExists(status, mode) {
             if(status === true) {
-                showMessage("./assets/INFO.png", "File already scanned!")
+                showMessage("./assets/INFO.png", "No new changes detected for " + path_to_file.split("/").slice(-1)[0])
             }
             else {
                 if(mode === "replace") {

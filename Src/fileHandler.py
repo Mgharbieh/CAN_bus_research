@@ -71,7 +71,7 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
                 json_obj = json.load(file)
                 lastEdited = json_obj["lastEdited"]
                 currentLastEdited = self.get_last_modified_date(json_obj["path"])
-                if(currentLastEdited > lastEdited):
+                if(currentLastEdited < lastEdited):
                     return False, "replace"
             return True, "_"
         else:

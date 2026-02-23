@@ -83,7 +83,7 @@ Item {
                     id: closeButtonText
                     anchors.fill: parent
                     text: "←"
-                    color: "#FFFFFF" 
+                    color: closeMouseArea.containsMouse ? '#adadad' : colorWay.titleTextColor
                     styleColor: "#FFFFFF"
                     font.pixelSize: 50
                     font.bold: true
@@ -92,15 +92,10 @@ Item {
                 }
 
                 MouseArea {
+                    id: closeMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: {
-                        closeButtonText.color = '#adadad' 
-                    } 
-                    onExited: {
-                        closeButtonText.color = "#FFFFFF"
-                    } 
                     onClicked: {
                         if(keyRequired === true) {
                             if(keyLength === 0) {
@@ -543,6 +538,13 @@ Item {
                         border.width: 1
                         border.color: colorWay.separatorColor
                         color: "transparent"
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: cursorShape = Qt.IBeamCursor
+                            onExited: cursorShape = Qt.ArrowCursor
+                        }
 
                         Text {
                             anchors {
