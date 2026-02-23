@@ -28,7 +28,7 @@ Item {
         id: settingsPageRect
         height: parent.height
         width: 0.5 * parent.width
-        color: backgroundcolor2
+        color: colorWay.backgroundcolor2
         x: parent.x
         radius: 15
         z:3
@@ -574,6 +574,7 @@ Item {
                             color: colorWay.textColor
                             font.pixelSize: 20
                             verticalAlignment: Text.AlignVCenter
+                            onTextEdited: keyLength = apiKeyInput.length
                             onEditingFinished: {
                                 if(apiKeyInput.length > 0) {
                                     console.log("api key edit finished")
