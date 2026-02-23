@@ -1,4 +1,5 @@
 import os
+import platform
 import json
 import dotenv 
 from pathlib import Path
@@ -37,7 +38,7 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
                 "highContrast": 0,
                 "aiAgent": 0
             }
-            with open(config_path, 'w') as file:
+            with open(config_path, 'w', encoding='utf-8') as file:
                 json.dump(self.config, file, indent=4)
             return self.config
 
@@ -64,8 +65,23 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
             return []
 
     def check_file_exists(self, name): # will add another condition to check if it was modified after last scan
-        file_path = self.save_dir / name
-        return os.path.exists(file_path)
+        file_path = self.save_dir / (name[:-4] + '_ino.json')
+        if(os.path.exists(file_path)):
+            with open(file_path, 'r') as file:
+                json_obj = json.load(file)
+                lastEdited = json_obj["lastEdited"]
+                currentLastEdited = self.get_last_modified_date(json_obj["path"])
+                if(currentLastEdited > lastEdited):
+                    return False, "replace"
+            return True, "_"
+        else:
+            return False, "add"
+
+    def get_last_modified_date(self, path):
+        if(platform.system() == 'Windows'):
+            return os.path.getmtime(path[1:])     
+        else:
+            return os.path.getmtime(path)
 
     def load_file(self, name):
         try:

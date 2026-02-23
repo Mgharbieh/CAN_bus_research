@@ -1,3 +1,4 @@
+import os
 import sys
 import ctypes
 import IssueChecker 
@@ -25,12 +26,10 @@ class AnalysisWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         try:
-            if(self.fileManager.check_file_exists(self.path.split('/')[-1][:-4] + '_ino.json')):
-                return
-            
             issueCount, data, code = self.checker.analyzeFile(self.path)
             fileName = self.path.split('/')[-1][:-4]
-            fileData = {"data":data, "sourceCode":code, "path":self.path}
+            lastModified = self.fileManager.get_last_modified_date(self.path)  
+            fileData = {"data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
             if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
                 self.signals.analysisResult.emit(issueCount)
         except Exception as e:
@@ -83,6 +82,7 @@ class DeleteAllWorker(QRunnable):
 
 class AnalysisInterface(QObject):
 
+    fileExists = pyqtSignal(bool, str)
     fileProcessed = pyqtSignal(int)
     fileLoaded = pyqtSignal(list, str)
     populateSavedFiles = pyqtSignal(str)
@@ -112,6 +112,11 @@ class AnalysisInterface(QObject):
         if(type(saved_files) != list):
             self.populateSavedFiles.emit(saved_files)
 
+    def checkFileExists(self, path):    
+        exists, mode = self.fileManager.check_file_exists(path)
+        print(exists)
+        self.fileExists.emit(exists, mode)
+        
     def analyzeFile(self, path):
         worker = AnalysisWorker(self.checker, self.fileManager,path)
         worker.signals.analysisResult.connect(self.fileProcessed.emit)
@@ -155,6 +160,7 @@ if not engine.rootObjects():
 interface.loadConfiguration()
 interface.populateSavedFileList()
 root_object = engine.rootObjects()[0]
+root_object.checkFileExists.connect(interface.checkFileExists)
 root_object.scanFile.connect(interface.analyzeFile)
 root_object.loadSelectedFile.connect(interface.loadFile)  
 root_object.configUpdated.connect(interface.updateConfiguration)

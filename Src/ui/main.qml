@@ -26,6 +26,7 @@ ApplicationWindow {
     property var sourceCode 
 
     signal scanFile(string path)
+    signal checkFileExists(string name)
     signal loadSelectedFile(string name)
     signal configUpdated(string key, var val)
     signal deleteFile(string path)
@@ -46,6 +47,22 @@ ApplicationWindow {
 
     Connections {
         target: ISSUE_CHECKER
+
+        function onFileExists(status, mode) {
+            if(status === true) {
+                showMessage("./assets/INFO.png", "File already scanned!")
+            }
+            else {
+                if(mode === "replace") {
+                    replaceExistingFile()
+                    processFile()
+                }
+                else {
+                    processFile()
+                }
+                
+            }
+        } 
 
         function onFileProcessed(issueCount) {
             savedModel.setProperty(itemBeingScanned, "issues", issueCount)
@@ -801,7 +818,7 @@ ApplicationWindow {
     FileDialog {
         id: uploadFileDialog
         nameFilters: ["INO Files (*.ino)"]
-        onAccepted: processFile(selectedFile)
+        onAccepted: checkIfScanned(selectedFile)
     }
 
     Timer {
@@ -814,12 +831,19 @@ ApplicationWindow {
         }
     }
 
-    function processFile(filePath) {
-        path_to_file = new URL(filePath).pathname
+    function checkIfScanned(path) {
+        path_to_file = new URL(path).pathname
+        var name = path_to_file.split("/")
+        console.log("checking if file exists:", name[name.length - 1])
+        checkFileExists(name[name.length - 1])
+    }
+
+    function processFile() {
+        //path_to_file = new URL(filePath).pathname
         var name = path_to_file.split("/")
         var newElem = {
             "file_name": name[name.length - 1],
-            "issues": -1,
+            "issues": -1
         }
         scanInProgress = true
         savedModel.insert(0, newElem)
@@ -846,6 +870,17 @@ ApplicationWindow {
             fileInfoWindow.raise();
             fileInfoWindow.requestActivate();
             loadingWindow = false
+        }
+    }
+
+    function replaceExistingFile() {
+        var name = path_to_file.split("/")
+        for (var i = 0; i < savedModel.count; i++) {
+            var item = savedModel.get(i)
+            if(item.file_name === name[name.length - 1]) {
+                savedModel.remove(i)
+                break
+            }
         }
     }
 
