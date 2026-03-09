@@ -97,8 +97,12 @@ class AnalysisInterface(QObject):
     def loadConfiguration(self):
         config, apiKey = self.fileManager.loadConfig()
         if config:
-            self.configFileLoaded.emit(config["theme"], config["highContrast"], config["aiAgent"], apiKey)
-            # Load other configuration settings as needed
+            self.configFileLoaded.emit(
+                config.get("theme", 0),
+                config.get("highContrast", 0),
+                config.get("aiAgent", 0),
+                apiKey or ""
+            )
 
     def updateConfiguration(self, key, value):
         self.fileManager.updateConfig(key, value)
