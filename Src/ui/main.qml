@@ -17,6 +17,7 @@ ApplicationWindow {
     property int itemDeleted: -1
     property string path_to_file: ""
     property bool focused: true
+    property bool generatingSuggestions: false
 
     property var fileInfoWindow: null
     property bool loadingWindow: false
@@ -63,6 +64,10 @@ ApplicationWindow {
                 
             }
         } 
+
+        function onStatusMessage(status) {
+            generatingSuggestions = status
+        }
 
         function onFileProcessed(issueCount) {
             savedModel.setProperty(itemBeingScanned, "issues", issueCount)
@@ -325,7 +330,10 @@ ApplicationWindow {
                                 }
 
                                 text: {
-                                    if(issues === -1) {"Processing file..."}
+                                    if(issues === -1) {
+                                        if(generatingSuggestions) {"Generating potential solutions..."}
+                                        else {"Processing file..."}
+                                    }
                                     else if(issues === 0) {"No issues found"}
                                     else if(issues === 1 ) {"1 issue found"}
                                     else (issues + " issues found")

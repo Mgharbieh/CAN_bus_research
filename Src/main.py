@@ -13,6 +13,7 @@ class WorkerSignals(QObject):
     analysisResult = pyqtSignal(int)
     fileResult = pyqtSignal(list, str)
     deleteResult = pyqtSignal(str)
+    statusMessage = pyqtSignal(bool)
 
 class AnalysisWorker(QRunnable):
     def __init__(self, checker, fileManager, path):
@@ -27,7 +28,9 @@ class AnalysisWorker(QRunnable):
         try:
             issueCount, data, code = self.checker.analyzeFile(self.path)
             print("")
+            self.signals.statusMessage.emit(True)
             self.checker.llmSolve(data, code)
+            self.signals.statusMessage.emit(False)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
             fileData = {"data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
@@ -85,6 +88,7 @@ class AnalysisInterface(QObject):
 
     fileExists = pyqtSignal(bool, str)
     fileProcessed = pyqtSignal(int)
+    statusMessage = pyqtSignal(bool)
     fileLoaded = pyqtSignal(list, str)
     populateSavedFiles = pyqtSignal(str)
     configFileLoaded = pyqtSignal(int, int, int, str)
@@ -124,6 +128,7 @@ class AnalysisInterface(QObject):
         
     def analyzeFile(self, path):
         worker = AnalysisWorker(self.checker, self.fileManager,path)
+        worker.signals.statusMessage.connect(self.statusMessage.emit)
         worker.signals.analysisResult.connect(self.fileProcessed.emit)
         self.threadPool.start(worker)
         
@@ -143,7 +148,7 @@ class AnalysisInterface(QObject):
         self.threadPool.start(worker)
 
 app = QGuiApplication(sys.argv)
-splash = QQuickView(QUrl.fromLocalFile("./ui/SplashScreen.qml"))
+splash = QQuickView(QUrl.fromLocalFile("./Src/ui/SplashScreen.qml"))
 splash.setFlags(Qt.WindowType.SplashScreen | Qt.WindowType.WindowStaysOnTopHint)
 splash.setColor(Qt.GlobalColor.transparent)
 splash.show()
@@ -151,14 +156,14 @@ app.processEvents()
 
 #myappid = 'statican.gui.v1' 
 #ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-app.setWindowIcon(QIcon("./ui/assets/statican.ico"))
+app.setWindowIcon(QIcon("./Src/ui/assets/statican.ico"))
 interface = AnalysisInterface()
 
 QQuickStyle.setStyle("Material")
 engine = QQmlApplicationEngine()
 engine.rootContext().setContextProperty('ISSUE_CHECKER', interface)
 engine.quit.connect(app.quit)
-engine.load('./ui/Main.qml')
+engine.load('./Src/ui/Main.qml')
 if not engine.rootObjects():
     sys.exit(-1)
 
