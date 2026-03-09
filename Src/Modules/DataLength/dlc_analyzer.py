@@ -55,9 +55,9 @@ class DLCAnalyzer:
                         ) @call_expr
                     )
                 )]
-            ) @func_body
+            ) @func_body (#eq? @method "^[Ss]endMsgBuf$")
         )
-        (#match? @method "^[Ss]endMsgBuf$")
+        
         '''
 
         bufQuery = r'''

@@ -29,6 +29,8 @@ class AnalysisWorker(QRunnable):
                 return
             
             issueCount, data, code = self.checker.analyzeFile(self.path)
+            print("")
+            self.checker.llmSolve(data, code)
             fileName = self.path.split('/')[-1][:-4]
             fileData = {"data":data, "sourceCode":code, "path":self.path}
             if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
@@ -139,8 +141,8 @@ splash.setColor(Qt.GlobalColor.transparent)
 splash.show()
 app.processEvents()
 
-myappid = 'statican.gui.v1' 
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+#myappid = 'statican.gui.v1' 
+#ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 app.setWindowIcon(QIcon("./ui/assets/statican.ico"))
 interface = AnalysisInterface()
 
