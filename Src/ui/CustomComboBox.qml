@@ -9,6 +9,7 @@ ComboBox {
     font.pixelSize: 20
 
     delegate: ItemDelegate {
+        property alias hoverTarget: hoverHandler1
         id: delegate
 
         required property var model
@@ -17,7 +18,7 @@ ComboBox {
         width: control.width
         contentItem: Text {
             text: delegate.model[control.textRole]
-            color: delegate.hovered || delegate.highlighted ? "white" : colorWay.textColor
+            color: delegate.hovered || delegate.highlighted ? colorWay.titleTextColor : colorWay.textColor
             font: control.font
             elide: Text.ElideRight
             leftPadding: 5
@@ -29,6 +30,11 @@ ComboBox {
             color: delegate.hovered || delegate.highlighted ? colorWay.accent1color : "transparent"
             radius: 2
         }
+
+        HoverHandler {
+            id: hoverHandler1
+            cursorShape:Qt.PointingHandCursor
+        }
     }
 
     indicator: Canvas {
@@ -39,9 +45,16 @@ ComboBox {
         height: 8
         contextType: "2d"
 
+        /*
         Connections {
             target: control
             function onPressedChanged() { canvas.requestPaint(); }
+        }
+        */
+
+        Connections {
+            target: hoverHandler3
+            function onHoveredChanged() { canvas.requestPaint(); }
         }
 
         onPaint: {
@@ -50,7 +63,7 @@ ComboBox {
             context.lineTo(width, 0);
             context.lineTo(width / 2, height);
             context.closePath();
-            context.fillStyle = control.pressed ? colorWay.accent1color : colorWay.separatorColor;
+            context.fillStyle =  hoverHandler3.hovered ? colorWay.accent1color : colorWay.separatorColor; //control.pressed
             context.fill();
         }
     }
@@ -69,10 +82,15 @@ ComboBox {
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 40
-        border.color: control.pressed ? colorWay.accent1color : colorWay.separatorColor
+        border.color: hoverHandler2.hovered ? colorWay.accent1color : colorWay.separatorColor
         border.width: control.visualFocus ? 2 : 1
         color: backgroundcolor
         radius: 2
+
+        HoverHandler {
+            id: hoverHandler2
+            cursorShape: Qt.PointingHandCursor
+        }
     }
 
     popup: Popup {
@@ -95,5 +113,9 @@ ComboBox {
             color: colorWay.backgroundcolor
             radius: 2
         }
+    }
+
+    HoverHandler {
+        id: hoverHandler3
     }
 }
