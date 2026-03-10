@@ -68,7 +68,7 @@ class IssueChecker():
             temperature = 0.3,
             num_ctx = 8192,
             num_predict = 600,
-            top_k = 30,
+            top_k = 30, 
             top_p = 0.9,
             repeat_penalty = 1.1,
             repeat_last_n= 128,
@@ -76,7 +76,10 @@ class IssueChecker():
             ).with_structured_output(IssueSolutionList)
         
     SYSTEM_PROMPT = """
-You are a code analysis assistant.
+You are a code analysis assistant for CAN bus code.
+
+The CAN Libraries you will be analysing are the following so maintain their syntax and semantics in your solutions:
+- arduino_mcp2515
 
 Your job is to generate solutions ONLY for explicitly provided issues.
 Do not invent issues.
@@ -90,6 +93,9 @@ Rules:
 - Reference exact code lines or exact code snippets when possible.
 - Do not include markdown fences.
 - Do not include any commentary before or after the output.
+- The issue messages may reference line numbers, but these are not guaranteed to be accurate. Always verify against the source code.
+- Flags like 'CAN_RTR_FLAG' or 'CAN_SFF_FLAG' (or similar depending on the library) may be utilized and sometimes you may need to infer the intent of a code snippet to understand the issue before assuming changes need to be made.
+- Focus on providing actionable solutions that directly address the issue messages.
 """
 
     HUMAN_PROMPT = """
@@ -109,7 +115,7 @@ Source code:
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
-        ("human", HUMAN_PROMPT),
+        ("human", HUMAN_PROMPT)
     ])
 
     chain = prompt | llm
