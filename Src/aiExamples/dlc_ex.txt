@@ -1,0 +1,58 @@
+SOURCE CODE PROBLEM SNIPPET:
+[
+  void setup() {
+  canMsg1.can_id  = 0x0F6;
+  canMsg1.can_dlc = 9;
+  canMsg1.data[0] = 0x8E;
+  canMsg1.data[1] = 0x87;
+  canMsg1.data[2] = 0x32;
+  canMsg1.data[3] = 0xFA;
+  canMsg1.data[4] = 0x26;
+  canMsg1.data[5] = 0x8E;
+  canMsg1.data[6] = 0xBE;
+  canMsg1.data[7] = 0x86;
+
+  canMsg2.can_id  = 0x036;
+  canMsg2.can_dlc = 7;
+  canMsg2.data[0] = 0x0E;
+  canMsg2.data[1] = 0x00;
+  canMsg2.data[2] = 0x00;
+  canMsg2.data[3] = 0x08;
+  canMsg2.data[4] = 0x01;
+  canMsg2.data[5] = 0x00;
+  canMsg2.data[6] = 0x00;
+  canMsg2.data[7] = 0xA0;
+
+  canMsg3.can_id  = 0x099;
+  canMsg3.can_dlc = 8;
+  canMsg3.data[0] = 0x0E;
+  canMsg3.data[1] = 0x00;
+  canMsg3.data[2] = 0x00;
+  canMsg3.data[3] = 0x08;
+  canMsg3.data[4] = 0x01;
+  canMsg3.data[5] = 0x00;
+  canMsg3.data[6] = 0x00;
+  canMsg3.data[7] = 0xA0;
+}
+
+]
+
+OUTPUTS FOR THIS EXAMPLE:
+[
+Expected less than actual: canMsg1.can_dlc=9 at line 11 (>8).
+Expected more than actual: canMsg2.can_dlc=7 at line 22 (<8).
+]
+
+SOLUTIONS FOR THIS EXAMPLE:
+[
+    Issue Type: Data Length Code
+    Issue Number: 1
+    Issue Messages: Expected less than actual: canMsg1.can_dlc=9 at line 11 (>8).
+    Solution: Reduce the DLC value of canMsg1 from 9 to 8. Change line 'canMsg1.can_dlc = 9;' to 'canMsg1.can_dlc = 8;'.
+
+    Issue Type: Data Length Code
+    Issue Number: 2
+    Issue Messages: Expected more than actual: canMsg2.can_dlc=7 at line 22 (<8).
+    Solution: Increase the DLC value of canMsg2 from 7 to 8. Change line 'canMsg2.can_dlc = 7;' to 'canMsg2.can_dlc = 8;'.
+
+]

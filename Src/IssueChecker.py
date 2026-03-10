@@ -1,5 +1,8 @@
+from typing import List
+import platform
+import json
+from pydantic import BaseModel, Field
 import tree_sitter as TreeSitter
-from sys import argv
 
 import tree_sitter_cpp as _CPP
 CPP_LANGUAGE = TreeSitter.Language(_CPP.language())
@@ -10,6 +13,184 @@ import Modules.IDBitLength.IDAnalyzer as id_analyzer
 import Modules.DataBytePacking.DataByte_Analyzer as data_byte_packing
 import Modules.DataLength.dlc_analyzer as dlc_analyzer
 
+from langchain_ollama import ChatOllama as ai
+from langchain_core.prompts import ChatPromptTemplate
+
+class IssueSolution(BaseModel):
+    issue_type: str = Field(description="Type of issue, e.g. Mask Filter")
+    issue_number: int = Field(description="1-based issue number")
+    issue_message: str = Field(description="Original issue message")
+    solution: str = Field(description="Concrete fix for the issue")
+
+class IssueSolutionList(BaseModel):
+    solutions: List[IssueSolution]
+
+class IssueChecker():
+
+    
+
+    def __init__(self):
+        self.mask_filt_analyzer = mask_filt.MaskAndFilter()
+        self.rtr_check_analyzer = RTR_Check.RTRBitChecker()
+        self.id_bit_length_analyzer = id_analyzer.IDBitLength()
+        self.data_byte_packing_analyzer = data_byte_packing.DataBytePackingAnalyzer()
+        self.data_length_analyzer = dlc_analyzer.DLCAnalyzer()
+
+    outputStructure =   "Issue Type: (insert type here) \n"\
+                        "Issue Number: (insert bug number here) \n"\
+                        "Issue Messages: (insert issue message here) \n"\
+                        "Solution: (insert solution here) \n"\
+          
+    
+
+    files = {
+        "mask_filt": "./aiExamples/mf_ex.txt",
+        "rtr": "./aiExamples/rtr_ex.txt",
+        "idLen": "./aiExamples/idbl_ex.txt",
+        "dataPack": "./aiExamples/dbp_ex.txt",
+        "dlc": "./aiExamples/dlc_ex.txt"
+    }
+
+    examples = {}
+
+    try:
+        for key, path in files.items():
+            with open(path, "r") as f:
+                examples[key] = f.read()
+
+    except FileNotFoundError as e:
+        print(f"Error: File not found -> {e.filename}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    llm = ai(
+            model="llama3",
+            temperature = 0.3,
+            num_ctx = 8192,
+            num_predict = 600,
+            top_k = 30,
+            top_p = 0.9,
+            repeat_penalty = 1.1,
+            repeat_last_n= 128,
+            seed = 42
+            ).with_structured_output(IssueSolutionList)
+        
+    SYSTEM_PROMPT = """
+You are a code analysis assistant.
+
+Your job is to generate solutions ONLY for explicitly provided issues.
+Do not invent issues.
+Do not solve anything that is not mentioned in the issue messages.
+If there are no issues, return an empty list.
+
+Rules:
+- Use the example only as a style guide, not as content to copy.
+- Each issue must produce exactly one solution object.
+- Keep the solution specific to the provided source code.
+- Reference exact code lines or exact code snippets when possible.
+- Do not include markdown fences.
+- Do not include any commentary before or after the output.
+"""
+
+    HUMAN_PROMPT = """
+Issue category: {issue_type}
+
+Example problem and example solution format:
+{example}
+
+Current issue messages:
+{messages}
+
+Source code:
+{source_code}
+""" 
+        
+
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", SYSTEM_PROMPT),
+        ("human", HUMAN_PROMPT),
+    ])
+
+    chain = prompt | llm
+
+    def render_solution(self, item: IssueSolution) -> str:
+        return (
+            f"Issue Type: {item.issue_type}\n"
+            f"Issue Number: {item.issue_number}\n"
+            f"Issue Messages: {item.issue_message}\n"
+            f"Solution: {item.solution}\n"
+        )
+    
+    def llmSolve(self, dataStream, sourceCode):
+
+        for type in ["mask_filt", "rtr", "idLen", "dataPack", "dlc"]:
+            current = dataStream[type]
+            issuesFound = False
+            exampleString = self.examples.get(type)
+
+
+            for out in current:
+                if out.endswith("_issues") and current[out] > 0:
+                    issuesFound = True
+                    continue
+                if out.endswith("_messages") and issuesFound:
+                    messages  = current[out]
+                    result = self.chain.invoke({
+                        "issue_type": type,
+                        "example": exampleString,
+                        "messages": messages,
+                        "source_code": sourceCode,
+                    })
+                    for item in result.solutions:
+                        print(self.render_solution(item))
+                if out.endswith("_messages") and not issuesFound:
+                    print(f"No solution necessary for {type}.")
+            
+            
+            
+    
+    def analyzeFile(self, inputFile):
+        dataStream = {}
+        issuesFound = 0
+        
+        dataStream["file_name"] = inputFile.split('/')[-1]
+        if(platform.system() == 'Windows'):
+            with(open(inputFile[1:], 'r', encoding='utf-8') as inFile):
+                sourceCode = inFile.read()
+        else:
+            with(open(inputFile, 'r', encoding='utf-8') as inFile):
+                    sourceCode = inFile.read()
+    
+        parser = TreeSitter.Parser(CPP_LANGUAGE)
+        tree = parser.parse(bytes(sourceCode, "utf8"))
+        RootCursor = tree.root_node
+
+        maskIssuesFound, maskIssueMessages = self.mask_filt_analyzer.checkMaskFilter(RootCursor)
+        issuesFound += maskIssuesFound
+        dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages}
+
+        rtrIssuesFound, rtrIssueMessages = self.rtr_check_analyzer.checkRTRmode(RootCursor)
+        issuesFound += rtrIssuesFound
+        dataStream["rtr"] = {"rtr_issues":rtrIssuesFound, "rtr_messages":rtrIssueMessages}
+
+        idLenIssuesFound, idLenIssueMessages = self.id_bit_length_analyzer.checkIDBitLength(RootCursor)
+        issuesFound += idLenIssuesFound
+        dataStream["idLen"] = {"idLen_issues":idLenIssuesFound, "idLen_messages":idLenIssueMessages}
+
+        dataPackIssuesFound, dataPackIssueMessages = self.data_byte_packing_analyzer.checkDataPack(RootCursor)
+        issuesFound += dataPackIssuesFound
+        dataStream["dataPack"] = {"dataPack_issues":dataPackIssuesFound, "dataPack_messages":dataPackIssueMessages}
+
+        dlcIssuesFound, dlcIssueMessages = self.data_length_analyzer.checkDLC(RootCursor)
+        issuesFound += dlcIssuesFound
+        dataStream["dlc"] = {"dlc_issues":dlcIssuesFound, "dlc_messages":dlcIssueMessages}
+
+        dataStream["totalIssues"] = issuesFound
+        return issuesFound, dataStream, sourceCode
+
+
+'''
 mask_filt_analyzer = mask_filt.MaskAndFilter()
 rtr_check_analyzer = RTR_Check.RTRBitChecker()
 id_bit_length_analyzer = id_analyzer.IDBitLength()
@@ -50,6 +231,10 @@ print("-"*100)
 print("\nDATA BYTE PACKING CHECK: \n")
 data_byte_packing_analyzer.checkDataPack(RootCursor)
 print("-"*100)
+print("-"*100)
 print("\nDLC CHECK: \n")
 data_length_analyzer.checkDLC(RootCursor)
 ##################################################################################################
+'''
+
+

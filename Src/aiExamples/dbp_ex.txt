@@ -1,0 +1,61 @@
+SOURCE CODE PROBLEM SNIPPET:
+[
+  void setup() {
+  
+  canMsg1.can_id  = 0x0F6;
+  canMsg1.can_dlc = 8;
+  canMsg1.data[0] = 0x8E;
+  canMsg1.data[1] = 0x87;
+  canMsg1.data[2] = 0x32;
+  canMsg1.data[3] = 0xFA;
+  canMsg1.data[4] = 0x26;
+  canMsg1.data[5] = 0x8E;
+  canMsg1.data[6] = 0xBE;
+  canMsg1.data[7] = 0x86;
+
+  canMsg2.can_id  = 0x036;
+  canMsg2.can_dlc = 8;
+  canMsg2.data[0] = 0x0E;
+  canMsg2.data[1] = 0x00;
+  canMsg2.data[2] = 0x00;
+  canMsg2.data[3] = 0x08;
+  canMsg2.data[4] = 0x01;
+  canMsg2.data[5] = 0x00;
+  canMsg2.data[6] = 0x00;
+
+  canMsg3.can_id  = 0x036;
+  canMsg3.can_dlc = 8;
+  canMsg3.data[0] = 0x0E;
+  canMsg3.data[1] = 0x00;
+  canMsg3.data[2] = 0x00;
+  canMsg3.data[3] = 0x08;
+  canMsg3.data[4] = 0x01;
+  canMsg3.data[5] = 0x00;
+  canMsg3.data[6] = 0x00;
+  canMsg3.data[7] = 0xA0;
+  canMsg3.data[8] = 0xA0;
+
+}
+
+]
+
+OUTPUTS FOR THIS EXAMPLE:
+[
+mcp2515.sendMessage(&canMsg1) DLC=8 matches BYTES=8. No issues found.
+mcp2515.sendMessage(&canMsg2)  DLC=8 > BYTES=7. (Underflow)
+mcp2515.sendMessage(&canMsg3)  DLC=8 < BYTES=9. (Overflow)
+
+]
+
+SOLUTIONS FOR THIS EXAMPLE:
+[
+    Issue Type: Data Byte Packing
+    Issue Number: 1
+    Issue Messages: mcp2515.sendMessage(&canMsg2)  DLC=8 > BYTES=7. (Underflow)
+    Solution: Increase the data length of canMsg2 by adjusting the value of canMsg2.can_dlc to match the number of bytes being sent.
+
+    Issue Type: Data Length Code
+    Issue Number: 2
+    Issue Messages: mcp2515.sendMessage(&canMsg3)  DLC=8 < BYTES=9. (Overflow)
+    Solution: The data length is set to 8, but the actual data packet has 9 bytes. Increase the DLC value to match the size of the data or remove the additional data packet. For example, change line 'canMsg3.can_dlc = 8;' to 'canMsg3.can_dlc = 9;' or delete 'canMsg3.data[8] = 0xA0;'.
+]

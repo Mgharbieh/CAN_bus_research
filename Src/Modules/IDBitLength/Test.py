@@ -25,8 +25,8 @@ CPP_LANGUAGE = TreeSitter.Language(_CPP.language())
 
 #################################################################################
 
-MODE = "testALl"
-PATH = "/Users/abrahamabdulkarim/Documents/code/CAN_bus_research/Src/Modules/IDBitLength/Test_Cases/"
+MODE = "testOne"
+PATH = "/Users/abrahamabdulkarim/Documents/code/CAN_bus_research/Src/Modules/IDBitLength/Test_Cases/test_arduino_mcp2515/testCase-5-6.ino"
 analyzer = IDAnalyzer.IDBitLength()
 
 def testAll():

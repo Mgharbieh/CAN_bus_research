@@ -3,7 +3,7 @@ from sys import argv
 import dlc_analyzer
 
 
-FOLDER = "//Users/moeab/CAN_bus_research/Src/Modules/DataLength/Test_Cases/"
+FOLDER = "/Users/abrahamabdulkarim/Documents/code/CAN_bus_research/Src/Modules/DataLength/Test_Cases/"
 #/Users/moeab/CAN_bus_research/Src/Modules/DataLength/Test_Cases/
 analyzer = dlc_analyzer.DLCAnalyzer()
 
