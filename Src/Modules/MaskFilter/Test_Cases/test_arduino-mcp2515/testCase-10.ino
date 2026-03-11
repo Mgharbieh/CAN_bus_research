@@ -42,12 +42,12 @@ void setup() {
 
 }
 
-// void setFliterValues(MCP2515 &mc2515) {
-//   // Different filter IDs
-//   mcp2515.setFilter(MCP2515::RXF0, false, 0x520);
-//   mcp2515.setFilter(MCP2515::RXF1, false, 0x521);
-//   mcp2515.setFilter(MCP2515::RXF2, false, 0x522);
-// }
+void setFliterValues(MCP2515 &mc2515) {
+  // Different filter IDs
+  mcp2515.setFilter(MCP2515::RXF0, false, 0x520);
+  mcp2515.setFilter(MCP2515::RXF1, false, 0x521);
+  mcp2515.setFilter(MCP2515::RXF2, false, 0x522);
+}
 
 void loop() {
   mcp2515.sendMessage(&canMsg1); 
