@@ -28,9 +28,9 @@ class AnalysisWorker(QRunnable):
         try:
             issueCount, data, code, lib = self.checker.analyzeFile(self.path)
             print("")
-            #self.signals.statusMessage.emit(True)
-            #self.checker.llmSolve(data, code)
-            #self.signals.statusMessage.emit(False)
+            self.signals.statusMessage.emit(True)
+            self.checker.llmSolve(data, code)
+            self.signals.statusMessage.emit(False)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
             fileData = {"library":lib, "data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
