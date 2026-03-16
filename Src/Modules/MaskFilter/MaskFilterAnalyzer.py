@@ -22,7 +22,7 @@ class MaskAndFilter():
             (function_definition
                 (function_declarator 
                     (identifier) @func_Decl
-                        (#eq? @func_Decl "setup")
+                        ;;(#eq? @func_Decl "setup")
                 )
                 (compound_statement
                     (expression_statement
@@ -54,7 +54,7 @@ class MaskAndFilter():
         (function_definition
             (function_declarator 
                 (identifier) @func_Decl
-                    (#eq? @func_Decl "setup")
+                    ;;(#eq? @func_Decl "setup")
             )
             (compound_statement
                 (expression_statement
@@ -138,7 +138,12 @@ class MaskAndFilter():
         loopText = ""
         for cap in captures:
             if(cap == 'function.body'):
-                loopText = captures[cap][0].text.decode() 
+                for capID in captures[cap]:
+                    tempText = capID.text.decode()
+                    if("setFilt" in tempText):
+                        continue
+                    else:
+                        loopText = tempText
 
         loopText = loopText.splitlines()
         for line in loopText:
