@@ -9,12 +9,14 @@ class MaskAndFilter():
         self.maskList = []
         self.setupFilterList = []
         self.loopFilterList = []
+        self.libraryDescriptor = []
 
     def _reset(self):
         self.strList = []
         self.maskList = []
         self.setupFilterList = []
         self.loopFilterList = []
+        self.libraryDescriptor = []
 
     #############################################################################
     def _maskSearch(self, root):    
@@ -48,6 +50,23 @@ class MaskAndFilter():
                     for node in args.children:
                         if(node.type == "number_literal" and ('0x' in node.text.decode())):
                             self.maskList.append(node.text.decode())
+            if cap == 'fd_Name':
+                fdNameList = captures[cap]
+                for fd in fdNameList:
+                    functionText = fd.text.decode()
+                    if(functionText == "init_Mask"): 
+                        self.libraryDescriptor.append("Seeed_Arduino_CAN")
+                        break
+                    elif(functionText == "setFilterMask"):
+                        self.libraryDescriptor.append("arduino-mcp2515")
+                        break
+                    elif(functionText == "setMask"):
+                        self.libraryDescriptor.append("CAN_Library")
+                        break
+                    else:
+                        self.libraryDescriptor.append("Unknown Library")
+                        break
+                    
     #############################################################################
     def _filterSetupSearch(self, root):
         setupFilterQuery = '''
@@ -81,6 +100,19 @@ class MaskAndFilter():
                     for node in args.children:
                         if(node.type == "number_literal" and ('0x' in node.text.decode())):
                             self.setupFilterList.append(node.text.decode())
+            if cap == 'fd_Name':
+                fdNameList = captures[cap]
+                for fd in fdNameList:
+                    functionText = fd.text.decode()
+                    if(functionText == "init_Filt"): 
+                        self.libraryDescriptor.append("Seeed_Arduino_CAN")
+                        break
+                    elif(functionText == "setFilter"):
+                        self.libraryDescriptor.append("arduino-mcp2515")
+                        break
+                    else:
+                        self.libraryDescriptor.append("Unknown Library")
+                        break
     #############################################################################
     def _loopFilterSearch(self, root):
 
@@ -98,6 +130,7 @@ class MaskAndFilter():
                         (binary_expression
                             (call_expression
                                 function: (field_expression) @target_func
+                                arguments: (argument_list) @args
                                     (#not-match? @target_func "check[rR]eceive")
                                     (#not-match? @target_func "mcp2515.sendMessage")
                             )
@@ -109,6 +142,7 @@ class MaskAndFilter():
                         (expression_statement
                             (call_expression
                                 function: (field_expression) @target_func
+                                arguments: (argument_list) @args
                             )
                         )
                     )
@@ -116,12 +150,14 @@ class MaskAndFilter():
                 (expression_statement
                     (call_expression 
                         function: (field_expression) @target_func
+                        arguments: (argument_list) @args
                     )
                 )
                 (declaration
                     (init_declarator
                         (call_expression 
                             function: (field_expression) @target_func
+                            arguments: (argument_list) @args
                         )
                     )
                 )]
@@ -144,6 +180,20 @@ class MaskAndFilter():
                         continue
                     else:
                         loopText = tempText
+            if(cap == 'target_func'):
+                funcList = captures[cap]
+                for funcIDX in range(0, len(funcList)):
+                    functionText = funcList[funcIDX].text.decode()
+                    if("readMsgBuf" in functionText):
+                        if(captures["args"][funcIDX].named_child_count == 2):
+                            self.libraryDescriptor.append("Seeed_Arduino_CAN")
+                            break
+                        elif(captures["args"][funcIDX].named_child_count == 3):
+                            self.libraryDescriptor.append("MCP_CAN_lib")
+                            break
+                    elif("readMessage" in functionText):
+                        self.libraryDescriptor.append("arduino-mcp2515")
+                        break
 
         loopText = loopText.splitlines()
         for line in loopText:
@@ -172,6 +222,29 @@ class MaskAndFilter():
                                     self.loopFilterList.append(hexVal)
                                     hexVal = ''
                         idx += 1
+                        
+    #############################################################################
+    def _libraryCheck(self):
+        if(self.libraryDescriptor[0] == "Unkown Library"):
+            return "Unkown"
+  
+        libraryGuess = ""
+        if(len(self.libraryDescriptor) == 2):
+            libraryGuess = "CAN_Library"
+        elif(len(self.libraryDescriptor) == 3):
+            maskDescriptor = self.libraryDescriptor[0]
+            filterDescriptor = self.libraryDescriptor[1]
+            messageDescriptor = self.libraryDescriptor[2]
+            
+            if(maskDescriptor == "Seeed_Arduino_CAN" and filterDescriptor == "Seeed_Arduino_CAN" and messageDescriptor == "Seeed_Arduino_CAN"):
+                libraryGuess = "Seeed_Arduino_CAN" #Arduino_CAN_BUS_MCP2515 has same syntax, so this should be fine
+            elif(maskDescriptor == "arduino-mcp2515" and filterDescriptor == "arduino-mcp2515" and messageDescriptor == "arduino-mcp2515"):
+                libraryGuess = "arduino-mcp2515"
+            elif(maskDescriptor == "Seeed_Arduino_CAN" and filterDescriptor == "Seeed_Arduino_CAN" and messageDescriptor == "MCP_CAN_lib"):
+                libraryGuess = "MCP_CAN_lib"
+            
+        return libraryGuess
+                            
     #############################################################################
     def _maskFilterCheck(self, root):
 
@@ -251,7 +324,8 @@ class MaskAndFilter():
     def checkMaskFilter(self, root):
         self._reset()
         totalIssues, messages = self._maskFilterCheck(root)
-        return totalIssues, messages
+        library = self._libraryCheck()
+        return totalIssues, messages, library
 
 
 

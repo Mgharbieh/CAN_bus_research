@@ -172,7 +172,7 @@ Source code:
         tree = parser.parse(bytes(sourceCode, "utf8"))
         RootCursor = tree.root_node
 
-        maskIssuesFound, maskIssueMessages = self.mask_filt_analyzer.checkMaskFilter(RootCursor)
+        maskIssuesFound, maskIssueMessages, library = self.mask_filt_analyzer.checkMaskFilter(RootCursor)
         issuesFound += maskIssuesFound
         dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages}
 
@@ -193,7 +193,7 @@ Source code:
         dataStream["dlc"] = {"dlc_issues":dlcIssuesFound, "dlc_messages":dlcIssueMessages}
 
         dataStream["totalIssues"] = issuesFound
-        return issuesFound, dataStream, sourceCode
+        return issuesFound, dataStream, sourceCode, library
 
 
 '''
