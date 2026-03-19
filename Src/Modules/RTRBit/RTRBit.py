@@ -470,7 +470,7 @@ class RTRBitChecker:
             print('#'*100)
             return len(self.resultList), self.resultList
 
-    def checkRTRmode(self, root):
+    def checkRTRmode(self, root, libraryAnalyzer):
         self._reset()
         issues, messages = self._checkRTRMode(root)
         return issues, messages

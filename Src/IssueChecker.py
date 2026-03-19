@@ -7,6 +7,7 @@ import tree_sitter as TreeSitter
 import tree_sitter_cpp as _CPP
 CPP_LANGUAGE = TreeSitter.Language(_CPP.language())
 
+import libraryDetector
 import Modules.MaskFilter.MaskFilterAnalyzer as mask_filt
 import Modules.RTRBit.RTRBit as RTR_Check
 import Modules.IDBitLength.IDAnalyzer as id_analyzer
@@ -29,7 +30,8 @@ class IssueChecker():
 
     
 
-    def __init__(self):
+    def __init__(self):  
+        self.libraryAnalyzer = libraryDetector.LibraryDetector()
         self.mask_filt_analyzer = mask_filt.MaskAndFilter()
         self.rtr_check_analyzer = RTR_Check.RTRBitChecker()
         self.id_bit_length_analyzer = id_analyzer.IDBitLength()
@@ -172,11 +174,13 @@ Source code:
         tree = parser.parse(bytes(sourceCode, "utf8"))
         RootCursor = tree.root_node
 
-        maskIssuesFound, maskIssueMessages, library = self.mask_filt_analyzer.checkMaskFilter(RootCursor)
+        # Library only detectable from files recieving data via masks/filters
+        # TODO: add library check for sending files in different module
+        maskIssuesFound, maskIssueMessages = self.mask_filt_analyzer.checkMaskFilter(RootCursor, self.libraryAnalyzer)
         issuesFound += maskIssuesFound
         dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages}
 
-        rtrIssuesFound, rtrIssueMessages = self.rtr_check_analyzer.checkRTRmode(RootCursor)
+        rtrIssuesFound, rtrIssueMessages = self.rtr_check_analyzer.checkRTRmode(RootCursor, self.libraryAnalyzer)
         issuesFound += rtrIssuesFound
         dataStream["rtr"] = {"rtr_issues":rtrIssuesFound, "rtr_messages":rtrIssueMessages}
 
@@ -193,6 +197,10 @@ Source code:
         dataStream["dlc"] = {"dlc_issues":dlcIssuesFound, "dlc_messages":dlcIssueMessages}
 
         dataStream["totalIssues"] = issuesFound
+        
+        self.libraryAnalyzer.detectLibrary()
+        library = self.libraryAnalyzer.libraryDescriptor
+        
         return issuesFound, dataStream, sourceCode, library
 
 
