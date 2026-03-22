@@ -26,14 +26,14 @@ class AnalysisWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         try:
-            issueCount, data, code = self.checker.analyzeFile(self.path)
+            issueCount, data, code, lib = self.checker.analyzeFile(self.path)
             print("")
-            self.signals.statusMessage.emit(True)
-            self.checker.llmSolve(data, code)
-            self.signals.statusMessage.emit(False)
+            #self.signals.statusMessage.emit(True)
+            #self.checker.llmSolve(data, code)
+            #self.signals.statusMessage.emit(False)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
-            fileData = {"data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
+            fileData = {"library":lib, "data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
             if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
                 self.signals.analysisResult.emit(issueCount)
         except Exception as e:

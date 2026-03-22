@@ -1,4 +1,5 @@
 import tree_sitter as TreeSitter
+from ..libFlags import LibFlags as flags
 
 import tree_sitter_cpp as _CPP
 CPP_LANGUAGE = TreeSitter.Language(_CPP.language())
@@ -9,20 +10,22 @@ class MaskAndFilter():
         self.maskList = []
         self.setupFilterList = []
         self.loopFilterList = []
+        self.libraryDescriptor = []
 
     def _reset(self):
         self.strList = []
         self.maskList = []
         self.setupFilterList = []
         self.loopFilterList = []
+        self.libraryDescriptor = []
 
     #############################################################################
-    def _maskSearch(self, root):    
+    def _maskSearch(self, root, lib):    
         maskQuery = '''
             (function_definition
                 (function_declarator 
                     (identifier) @func_Decl
-                        (#eq? @func_Decl "setup")
+                        ;;(#eq? @func_Decl "setup")
                 )
                 (compound_statement
                     (expression_statement
@@ -48,13 +51,27 @@ class MaskAndFilter():
                     for node in args.children:
                         if(node.type == "number_literal" and ('0x' in node.text.decode())):
                             self.maskList.append(node.text.decode())
+            if cap == 'fd_Name':
+                fdNameList = captures[cap]
+                for fd in fdNameList:
+                    functionText = fd.text.decode()
+                    if(functionText == "init_Mask"): 
+                        lib.maskDescriptor = flags.SEEED_ARDUINO_CAN
+                        break
+                    elif(functionText == "setFilterMask"):
+                        lib.maskDescriptor = flags.arduino_mcp_2515
+                        break
+                    elif(functionText == "setMask"):
+                        lib.maskDescriptor = flags.CAN_Library
+                        break
+                    
     #############################################################################
-    def _filterSetupSearch(self, root):
+    def _filterSetupSearch(self, root, lib):
         setupFilterQuery = '''
         (function_definition
             (function_declarator 
                 (identifier) @func_Decl
-                    (#eq? @func_Decl "setup")
+                    ;;(#eq? @func_Decl "setup")
             )
             (compound_statement
                 (expression_statement
@@ -81,8 +98,18 @@ class MaskAndFilter():
                     for node in args.children:
                         if(node.type == "number_literal" and ('0x' in node.text.decode())):
                             self.setupFilterList.append(node.text.decode())
+            if cap == 'fd_Name':
+                fdNameList = captures[cap]
+                for fd in fdNameList:
+                    functionText = fd.text.decode()
+                    if(functionText == "init_Filt"): 
+                        lib.filtDescriptor = flags.SEEED_ARDUINO_CAN
+                        break
+                    elif(functionText == "setFilter"):
+                        lib.filtDescriptor = flags.arduino_mcp_2515
+                        break
     #############################################################################
-    def _loopFilterSearch(self, root):
+    def _loopFilterSearch(self, root, lib):
 
         HEX_CHARS = ['x', 'A', 'B', 'C', 'D', 'E', 'F']
 
@@ -98,6 +125,7 @@ class MaskAndFilter():
                         (binary_expression
                             (call_expression
                                 function: (field_expression) @target_func
+                                arguments: (argument_list) @args
                                     (#not-match? @target_func "check[rR]eceive")
                                     (#not-match? @target_func "mcp2515.sendMessage")
                             )
@@ -109,6 +137,7 @@ class MaskAndFilter():
                         (expression_statement
                             (call_expression
                                 function: (field_expression) @target_func
+                                arguments: (argument_list) @args
                             )
                         )
                     )
@@ -116,12 +145,14 @@ class MaskAndFilter():
                 (expression_statement
                     (call_expression 
                         function: (field_expression) @target_func
+                        arguments: (argument_list) @args
                     )
                 )
                 (declaration
                     (init_declarator
                         (call_expression 
                             function: (field_expression) @target_func
+                            arguments: (argument_list) @args
                         )
                     )
                 )]
@@ -138,7 +169,29 @@ class MaskAndFilter():
         loopText = ""
         for cap in captures:
             if(cap == 'function.body'):
-                loopText = captures[cap][0].text.decode() 
+                for capID in captures[cap]:
+                    tempText = capID.text.decode()
+                    if("setFilt" in tempText):
+                        continue
+                    else:
+                        loopText = tempText
+            if(cap == 'target_func'):
+                funcList = captures[cap]
+                for funcIDX in range(0, len(funcList)):
+                    functionText = funcList[funcIDX].text.decode()
+                    if("readMsgBuf" in functionText):
+                        if(captures["args"][funcIDX].named_child_count == 2):
+                            lib.recvDescriptor = flags.SEEED_ARDUINO_CAN
+                            lib.recvArgLength = 2
+                            break
+                        elif(captures["args"][funcIDX].named_child_count == 3):
+                            lib.recvDescriptor = flags.MCP_CAN_lib
+                            lib.recvArgLength = 3
+                            break
+                    elif("readMessage" in functionText):
+                        lib.recvDescriptor = flags.arduino_mcp_2515
+                        lib.recvArgLength = 2
+                        break
 
         loopText = loopText.splitlines()
         for line in loopText:
@@ -166,13 +219,13 @@ class MaskAndFilter():
                                 elif(hexVal not in self.loopFilterList):
                                     self.loopFilterList.append(hexVal)
                                     hexVal = ''
-                        idx += 1
+                        idx += 1                    
     #############################################################################
-    def _maskFilterCheck(self, root):
+    def _maskFilterCheck(self, root, libraryAnalyzer):
 
-        self._maskSearch(root)
-        self._filterSetupSearch(root)
-        self._loopFilterSearch(root)
+        self._maskSearch(root, libraryAnalyzer)
+        self._filterSetupSearch(root, libraryAnalyzer)
+        self._loopFilterSearch(root, libraryAnalyzer)
     
         maskSetupWarn = False
         maskWarn = False
@@ -243,10 +296,7 @@ class MaskAndFilter():
         print("#"*100)
         return issues, returnList
     #############################################################################
-    def checkMaskFilter(self, root):
+    def checkMaskFilter(self, root, libraryAnalyzer):
         self._reset()
-        totalIssues, messages = self._maskFilterCheck(root)
+        totalIssues, messages = self._maskFilterCheck(root, libraryAnalyzer)
         return totalIssues, messages
-
-
-
