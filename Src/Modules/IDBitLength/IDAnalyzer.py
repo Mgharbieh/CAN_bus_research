@@ -130,31 +130,33 @@ class IDBitLength():
                                                 pair.append("extended") #frameIDList
                                                 self.frameIDList.append(pair)
                                                 pair = []
-                                            elif(x.type == "identifier" and x.text.decode() == "CAN_SFF_FLAG"):
+                                            elif(x.type == "identifier" and (x.text.decode() == "CAN_SFF_FLAG" or x.text.decode() == "CAN_RTR_FLAG")):
                                                 pair.append("standard")
                                                 self.frameIDList.append(pair)
                                                 pair = []
+
                                 elif(field.type == "identifier"):
-                                    varDecList = captures['var_dec']
-                                    varRefList = captures['ref_id']
-                                    for varDec in varDecList:
-                                        if(varDec.children[0].text.decode() == field.text.decode()):
-                                            pair.append(field.text.decode())
-                                            if(int(varDec.children[2].text.decode(),16) > 0x7FF):
-                                                self.mode = "extended"
-                                                pair.append("extended")
-                                                #pair.append("standard")
-                                                #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
-                                                #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
-                                            elif(int(varDec.children[2].text.decode(),16) <= 0x7FF): 
-                                                self.mode = "standard"
-                                                pair.append("standard")
-                                                #pair.append("standard")
-                                                #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
-                                                #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
-                                            self.frameIDList.append(pair)
-                                            print(self.frameIDList)
-                                            pair = []
+                                    # if(captures['var_dec'] != [] and captures["ref_id"] != []):
+                                        varDecList = captures.get('var_dec', [])
+                                        varRefList = captures.get('ref_id', [])
+                                        for varDec in varDecList:
+                                            if(varDec.children[0].text.decode() == field.text.decode()):
+                                                pair.append(field.text.decode())
+                                                if(int(varDec.children[2].text.decode(),16) > 0x7FF):
+                                                    self.mode = "extended"
+                                                    pair.append("extended")
+                                                    #pair.append("standard")
+                                                    #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
+                                                    #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
+                                                elif(int(varDec.children[2].text.decode(),16) <= 0x7FF): 
+                                                    self.mode = "standard"
+                                                    pair.append("standard")
+                                                    #pair.append("standard")
+                                                    #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
+                                                    #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
+                                                self.frameIDList.append(pair)
+                                                print(self.frameIDList)
+                                                pair = []
                         elif(node.type == "number_literal"):
                             pair.append(node.text.decode())
                             if(int(node.text.decode(),16) > 0x7FF):

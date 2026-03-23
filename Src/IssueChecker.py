@@ -23,6 +23,42 @@ class IssueSolution(BaseModel):
     issue_message: str = Field(description="Original issue message")
     solution: str = Field(description="Concrete fix for the issue")
 
+SYSTEM_PROMPT = """
+You are a code analysis assistant for CAN bus code.
+
+The CAN Libraries you will be analysing are the following so maintain their syntax and semantics in your solutions:
+- arduino_mcp2515
+
+Your job is to generate solutions ONLY for explicitly provided issues.
+Do not invent issues.
+Do not solve anything that is not mentioned in the issue messages.
+If there are no issues, return an empty list.
+
+Rules:
+- Use the example only as a style guide, not as content to copy.
+- Each issue must produce exactly one solution object.
+- Keep the solution specific to the provided source code.
+- Reference exact code lines or exact code snippets when possible.
+- Do not include markdown fences.
+- Do not include any commentary before or after the output.
+- The issue messages may reference line numbers, but these are not guaranteed to be accurate. Always verify against the source code.
+- Flags like 'CAN_RTR_FLAG' or 'CAN_SFF_FLAG' (or similar depending on the library) may be utilized and sometimes you may need to infer the intent of a code snippet to understand the issue before assuming changes need to be made.
+- Focus on providing actionable solutions that directly address the issue messages.
+"""
+
+HUMAN_PROMPT = """
+Issue category: {issue_type}
+
+Example problem and example solution format:
+{example}
+
+Current issue messages:
+{messages}
+
+Source code:
+{source_code}
+""" 
+
 class IssueSolutionList(BaseModel):
     solutions: List[IssueSolution]
 
@@ -37,6 +73,8 @@ class IssueChecker():
         self.id_bit_length_analyzer = id_analyzer.IDBitLength()
         self.data_byte_packing_analyzer = data_byte_packing.DataBytePackingAnalyzer()
         self.data_length_analyzer = dlc_analyzer.DLCAnalyzer()
+        self.llm = None
+        self.chain = None
 
     outputStructure =   "Issue Type: (insert type here) \n"\
                         "Issue Number: (insert bug number here) \n"\
@@ -65,62 +103,39 @@ class IssueChecker():
     except Exception as e:
         print(f"An error occurred: {e}")
 
-    llm = ai(
-            model="llama3",
-            temperature = 0.3,
-            num_ctx = 8192,
-            num_predict = 600,
-            top_k = 30, 
-            top_p = 0.9,
-            repeat_penalty = 1.1,
-            repeat_last_n= 128,
-            seed = 42
-            ).with_structured_output(IssueSolutionList)
+    def initAI(self, modelNum):
+        model = ""
+        if(modelNum == 0):
+            self.llm = None
+            return
+        elif(modelNum == 1):
+            model = "llama3"
+        elif(modelNum == 2):
+            model = "gpt-4o"
+        elif(modelNum == 3):
+            model = "opus-4"
+        elif(modelNum == 4):
+            model = "gemini-2.0-pro"
+
+        self.llm = ai(
+                model= model,
+                temperature = 0.3,
+                num_ctx = 8192,
+                num_predict = 600,
+                top_k = 30, 
+                top_p = 0.9,
+                repeat_penalty = 1.1,
+                repeat_last_n= 128,
+                seed = 42
+                ).with_structured_output(IssueSolutionList)
         
-    SYSTEM_PROMPT = """
-You are a code analysis assistant for CAN bus code.
-
-The CAN Libraries you will be analysing are the following so maintain their syntax and semantics in your solutions:
-- arduino_mcp2515
-
-Your job is to generate solutions ONLY for explicitly provided issues.
-Do not invent issues.
-Do not solve anything that is not mentioned in the issue messages.
-If there are no issues, return an empty list.
-
-Rules:
-- Use the example only as a style guide, not as content to copy.
-- Each issue must produce exactly one solution object.
-- Keep the solution specific to the provided source code.
-- Reference exact code lines or exact code snippets when possible.
-- Do not include markdown fences.
-- Do not include any commentary before or after the output.
-- The issue messages may reference line numbers, but these are not guaranteed to be accurate. Always verify against the source code.
-- Flags like 'CAN_RTR_FLAG' or 'CAN_SFF_FLAG' (or similar depending on the library) may be utilized and sometimes you may need to infer the intent of a code snippet to understand the issue before assuming changes need to be made.
-- Focus on providing actionable solutions that directly address the issue messages.
-"""
-
-    HUMAN_PROMPT = """
-Issue category: {issue_type}
-
-Example problem and example solution format:
-{example}
-
-Current issue messages:
-{messages}
-
-Source code:
-{source_code}
-""" 
-        
-
-
-    prompt = ChatPromptTemplate.from_messages([
+        prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("human", HUMAN_PROMPT)
-    ])
+        ])
 
-    chain = prompt | llm
+        self.chain = prompt | self.llm
+        
 
     def render_solution(self, item: IssueSolution) -> str:
         return (
@@ -154,8 +169,6 @@ Source code:
                         print(self.render_solution(item))
                 if out.endswith("_messages") and not issuesFound:
                     print(f"No solution necessary for {type}.")
-            
-            
             
     
     def analyzeFile(self, inputFile):
