@@ -188,6 +188,11 @@ ApplicationWindow {
                                     color: colorWay.textColor
                                     wrapMode: Text.NoWrap
                                 }
+
+                                Rectangle {
+                                    anchors.fill: codeLine
+                                    color: "transparent"
+                                }
                             }
                         }
                     }
@@ -362,7 +367,7 @@ ApplicationWindow {
             Text {
                 anchors.centerIn: parent
                 font.pixelSize: 30
-                text: "LLM suggestions go here"
+                text: "No issues found!"
                 color: textColor
             }
         }

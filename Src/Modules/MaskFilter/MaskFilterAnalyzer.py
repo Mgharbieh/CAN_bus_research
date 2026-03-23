@@ -10,6 +10,7 @@ class MaskAndFilter():
         self.maskList = []
         self.setupFilterList = []
         self.loopFilterList = []
+        self.lineNums = [] 
         self.libraryDescriptor = []
 
     def _reset(self):
@@ -51,6 +52,7 @@ class MaskAndFilter():
                     for node in args.children:
                         if(node.type == "number_literal" and ('0x' in node.text.decode())):
                             self.maskList.append(node.text.decode())
+                            
             if cap == 'fd_Name':
                 fdNameList = captures[cap]
                 for fd in fdNameList:

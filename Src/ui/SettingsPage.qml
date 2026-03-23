@@ -478,11 +478,11 @@ Item {
                         id: llmSelect
                         height: parent.height * 0.6
                         width: 120
-                        model: ["Llama", "ChatGPT", "Claude", "Gemeni"]   //add others??
+                        model: ["Off (No AI)","Llama3", "ChatGPT", "Claude", "Gemini"]   //add others??
                         editable: false
                         onActivated: { 
                             displayText = currentText
-                            llmSelect.currentIndex > 0 ? keyRequired = true : keyRequired = false
+                            llmSelect.currentIndex > 1 ? keyRequired = true : keyRequired = false
                             root.configUpdated("aiAgent", llmSelect.currentIndex)
                             apiKeyInput.text = ""
                             root.storeAPIKey("API_KEY", "")

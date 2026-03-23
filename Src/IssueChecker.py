@@ -137,7 +137,6 @@ Source code:
             issuesFound = False
             exampleString = self.examples.get(type)
 
-
             for out in current:
                 if out.endswith("_issues") and current[out] > 0:
                     issuesFound = True
@@ -198,7 +197,7 @@ Source code:
 
         dataStream["totalIssues"] = issuesFound
         
-        self.libraryAnalyzer.detectLibrary()
+        self.libraryAnalyzer.detectLibrary(RootCursor)
         library = self.libraryAnalyzer.libraryDescriptor
         
         return issuesFound, dataStream, sourceCode, library

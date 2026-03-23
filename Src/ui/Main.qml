@@ -723,10 +723,11 @@ ApplicationWindow {
             }
             z:1
             radius: 20
+            color: colorWay.backgroundcolor
 
             Image {
-                anchors.centerIn:parent
-                source: "./assets/CECS_2.png"
+                anchors.centerIn: parent
+                source: colorWay.cecsIconSrc
 
                 width: parent.width - 5
                 height: parent.height -5

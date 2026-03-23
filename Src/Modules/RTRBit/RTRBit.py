@@ -204,22 +204,23 @@ class RTRBitChecker:
                     can_obj = msg[2]
 
                     dlcSizeNode = None
-                    for id in idList:
-                        for node in id.children:
-                            if((node.type == "field_expression") and ('dlc' in node.text.decode()) and (can_obj in node.text.decode())):
-                                dlcSizeNode = node.next_named_sibling
-                    try:
-                        if(dlcSizeNode.type == "number_literal"):
-                            msg.insert(3, int(dlcSizeNode.text.decode()))
-                    except AttributeError:
-                        msg.insert(3, 0)
+                    if(can_obj != None):
+                        for id in idList:
+                            for node in id.children:
+                                if((node.type == "field_expression") and ('dlc' in node.text.decode()) and (can_obj in node.text.decode())):
+                                    dlcSizeNode = node.next_named_sibling
+                        try:
+                            if(dlcSizeNode.type == "number_literal"):
+                                msg.insert(3, int(dlcSizeNode.text.decode()))
+                        except AttributeError:
+                            msg.insert(3, 0)
 
-                    can_addr = msg[0]
-                    if((can_obj + '(' + can_addr + ") set the RTR bit to high but it has a data length associated with it.") in self.resultList):
-                        continue
-                    elif(msg[3] != 0):
-                        issueStr = can_obj + '(' + can_addr + ") set the RTR bit to high but it has a data length associated with it."
-                        self.resultList.append(issueStr)
+                        can_addr = msg[0]
+                        if((can_obj + '(' + can_addr + ") set the RTR bit to high but it has a data length associated with it.") in self.resultList):
+                            continue
+                        elif(msg[3] != 0):
+                            issueStr = can_obj + '(' + can_addr + ") set the RTR bit to high but it has a data length associated with it."
+                            self.resultList.append(issueStr)
 
             if cap == 'sendBuf':
                 sendList = captures[cap]
