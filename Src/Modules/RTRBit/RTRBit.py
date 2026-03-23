@@ -7,6 +7,7 @@ class RTRBitChecker:
     def __init__(self):
         self.msgList = []
         self.resultList = []
+        self.lineNums = []
     
     def _reset(self):
         self.msgList = []
@@ -183,6 +184,7 @@ class RTRBitChecker:
                 for id in idList:
                     pair = []
                     lineString = id.text.decode()
+                    lineNumber = id.start_point.row + 1
                     for node in id.children:
                         if(node.type == "binary_expression"):
                             for field in node.children:
@@ -193,15 +195,18 @@ class RTRBitChecker:
                                         pair.insert(1, True) 
                                         lineString = lineString.split('.')
                                         pair.insert(2, lineString[0])
+                                        pair.insert(3, lineNumber)
                                         self.msgList.append(pair.copy())
                                     else:
                                         pair.insert(1, False)
                                         pair.insert(2, None)
+                                        pair.insert(3, lineNum)
                                         self.msgList.append(pair.copy())
 
                 for idx in range(0, len(self.msgList)):
                     msg = self.msgList[idx]
                     can_obj = msg[2]
+                    line_number = msg[3]
 
                     dlcSizeNode = None
                     if(can_obj != None):
@@ -211,16 +216,17 @@ class RTRBitChecker:
                                     dlcSizeNode = node.next_named_sibling
                         try:
                             if(dlcSizeNode.type == "number_literal"):
-                                msg.insert(3, int(dlcSizeNode.text.decode()))
+                                msg.insert(4, int(dlcSizeNode.text.decode()))
                         except AttributeError:
-                            msg.insert(3, 0)
+                            msg.insert(4, 0)
 
                         can_addr = msg[0]
                         if((can_obj + '(' + can_addr + ") set the RTR bit to high but it has a data length associated with it.") in self.resultList):
                             continue
-                        elif(msg[3] != 0):
+                        elif(msg[4] != 0):
                             issueStr = can_obj + '(' + can_addr + ") set the RTR bit to high but it has a data length associated with it."
                             self.resultList.append(issueStr)
+                            self.lineNums.append(line_number)
 
             if cap == 'sendBuf':
                 sendList = captures[cap]
@@ -262,6 +268,7 @@ class RTRBitChecker:
                     if(args[2] == 1):
                         pair.append(args[0])
                         pair.append(True)
+                        pair.append(lineNum)
                         self.msgList.append(pair.copy())
 
                         if(args[3] != 0 or (args[4].strip() != 'NULL' and args[4].strip() != 'nullptr')):
@@ -273,6 +280,7 @@ class RTRBitChecker:
                     elif(args[2] == 0):
                         pair.append(args[0])
                         pair.append(False)
+                        pair.append(lineNum)
                         self.msgList.append(pair.copy())
 
             if(cap == "id_call_expr"):
@@ -315,6 +323,7 @@ class RTRBitChecker:
                         pair.append(args[1])
                         pair.append(args[2].strip())
                         pair.append(sendFunc.text.decode())
+                        pair.append(lineNum)
                         self.msgList.append(pair.copy())
                     
                     elif(len(args) == 5):
@@ -359,6 +368,7 @@ class RTRBitChecker:
                         pair.append(args[2])
                         pair.append(args[3])
                         pair.append(sendFunc.text.decode())
+                        pair.append(lineNum)
                         self.msgList.append(pair.copy())
 
 
@@ -373,6 +383,7 @@ class RTRBitChecker:
                             else:
                                 issueStr = "message ID '" + id_name + '\' (' + canIDFlags[1] + ") set the RTR bit to high but it has a data length associated with it in " + senderLine
                                 self.resultList.append(issueStr)
+                                self.lineNums.append(canIDFlags[-1])
 
             if(cap == "call_expr"):
                 functionText = captures['func_body'][0].text.decode()
@@ -403,6 +414,7 @@ class RTRBitChecker:
                         pair.append(args[1])
                         pair.append(args[2].strip())
                         pair.append(captures['call_expr'][idx].text.decode())
+                        pair.append(lineNum)
                         self.msgList.append(pair.copy())
                     elif('|' in args[0]):
                         pair.append(args[0].split('|')[0].strip())
@@ -410,6 +422,7 @@ class RTRBitChecker:
                         pair.append(None)
                         pair.append(args[2].strip())
                         pair.append(captures['call_expr'][idx].text.decode())
+                        pair.append(lineNum)
                         self.msgList.append(pair.copy())
                     else:
                         pair.append(args[0].strip())
@@ -417,6 +430,7 @@ class RTRBitChecker:
                         pair.append(None)   
                         pair.append(args[2].strip())
                         pair.append(captures['call_expr'][idx].text.decode())  
+                        pair.append(lineNum)
                         self.msgList.append(pair.copy())
 
                 for msg in self.msgList:
@@ -425,7 +439,8 @@ class RTRBitChecker:
                             continue
                         else:
                             issueStr = msg[4] + " set the RTR bit to high but it has a data length associated with it."
-                            self.resultList.append(issueStr)              
+                            self.resultList.append(issueStr)   
+                            self.lineNums.append(msg[-1])           
 
             if(cap == "rtr_expr_3"):
                 for idx in range(0, len(captures[cap])):
@@ -436,12 +451,14 @@ class RTRBitChecker:
                     except:
                         rtr_val = bool(captures["rtr_mode_3"][idx].text.decode())
                         rtr_val = int(rtr_val)
+                    lineNum = captures["rtr_mode_3"][idx].start_point.row + 1
                     dlc = int(captures["dlc_3"][idx].text.decode())
 
                     if(rtr_val == 1):
                         pair.append(message_name)
                         pair.append(rtr_val)
                         pair.append(dlc)
+                        pair.append(lineNum)
                         self.msgList.append(pair)
 
                 for msg in self.msgList:
@@ -450,7 +467,8 @@ class RTRBitChecker:
                             continue
                         else:
                             issueStr = msg[0] + " set the RTR bit to high but it has a data length associated with it."
-                            self.resultList.append(issueStr)              
+                            self.resultList.append(issueStr)           
+                            self.lineNums.append(msg[-1])   
 
         print('#'*100)
         print()
@@ -474,4 +492,4 @@ class RTRBitChecker:
     def checkRTRmode(self, root, libraryAnalyzer):
         self._reset()
         issues, messages = self._checkRTRMode(root)
-        return issues, messages
+        return issues, messages, self.lineNums

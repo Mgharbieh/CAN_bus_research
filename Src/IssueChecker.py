@@ -179,9 +179,9 @@ Source code:
         issuesFound += maskIssuesFound
         dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages, "mf_lineNums": maskIssueLineNums}
 
-        rtrIssuesFound, rtrIssueMessages = self.rtr_check_analyzer.checkRTRmode(RootCursor, self.libraryAnalyzer)
+        rtrIssuesFound, rtrIssueMessages, rtrLineNums = self.rtr_check_analyzer.checkRTRmode(RootCursor, self.libraryAnalyzer)
         issuesFound += rtrIssuesFound
-        dataStream["rtr"] = {"rtr_issues":rtrIssuesFound, "rtr_messages":rtrIssueMessages}
+        dataStream["rtr"] = {"rtr_issues":rtrIssuesFound, "rtr_messages":rtrIssueMessages, "rtr_lineNums":rtrLineNums}
 
         idLenIssuesFound, idLenIssueMessages = self.id_bit_length_analyzer.checkIDBitLength(RootCursor)
         issuesFound += idLenIssuesFound
