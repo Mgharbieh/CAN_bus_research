@@ -51,7 +51,7 @@ class MaskAndFilter():
                 for args in argList:
                     for node in args.children:
                         if(node.type == "number_literal" and ('0x' in node.text.decode())):
-                            self.maskList.append(node.text.decode())
+                            self.maskList.append((node.text.decode(), node.start_point.row + 1))
                             
             if cap == 'fd_Name':
                 fdNameList = captures[cap]
@@ -99,7 +99,7 @@ class MaskAndFilter():
                 for args in argList:
                     for node in args.children:
                         if(node.type == "number_literal" and ('0x' in node.text.decode())):
-                            self.setupFilterList.append(node.text.decode())
+                            self.setupFilterList.append((node.text.decode(), node.start_point.row + 1))
             if cap == 'fd_Name':
                 fdNameList = captures[cap]
                 for fd in fdNameList:
@@ -169,6 +169,7 @@ class MaskAndFilter():
         queryCursor = TreeSitter.QueryCursor(query)
         captures = queryCursor.captures(root)
         loopText = ""
+        loopTextStartLine = -1
         for cap in captures:
             if(cap == 'function.body'):
                 for capID in captures[cap]:
@@ -177,6 +178,7 @@ class MaskAndFilter():
                         continue
                     else:
                         loopText = tempText
+                        loopTextStartLine =  capID.start_point.row + 1
             if(cap == 'target_func'):
                 funcList = captures[cap]
                 for funcIDX in range(0, len(funcList)):
@@ -196,7 +198,8 @@ class MaskAndFilter():
                         break
 
         loopText = loopText.splitlines()
-        for line in loopText:
+        for line_idx in range(0, len(loopText)):
+            line = loopText[line_idx]
             if(('if' in line) or ('case' in line)):
                 if(('0x' in line) or ('if' in line and '==' in line)):
                     chars = list(line)
@@ -219,7 +222,7 @@ class MaskAndFilter():
                                     hexVal = ''
                                     continue
                                 elif(hexVal not in self.loopFilterList):
-                                    self.loopFilterList.append(hexVal)
+                                    self.loopFilterList.append((hexVal, loopTextStartLine + line_idx))
                                     hexVal = ''
                         idx += 1                    
     #############################################################################
@@ -254,21 +257,28 @@ class MaskAndFilter():
             print("#"*100,'\n')
             return 0, returnList
 
-        for filter in self.setupFilterList:
+        for filterPair in self.setupFilterList:
+            filter = filterPair[0]
             for mask in self.maskList:
-                if((int(mask, 16) & int(filter, 16)) != int(filter, 16)):
-                    maskWarn = True 
-
-
+                if((int(mask[0], 16) & int(filter, 16)) != int(filter, 16)):
+                    maskWarn = True
+                    if(mask[1] not in self.lineNums):
+                        self.lineNums.append(mask[1]) 
             
-            if(filter not in self.loopFilterList):
+            if(len([el[0] for el in self.loopFilterList if el[0] == filter]) == 0):
                 usageWarn = True
                 unusedList.append(filter)
+                if(filterPair[1] not in self.lineNums):
+                    self.lineNums.append(filterPair[1])
         
-        for filt in self.loopFilterList:
-            if(filt not in self.setupFilterList):
+        for filtPair in self.loopFilterList:
+            filt = filtPair[0]
+            
+            if(len([el[0] for el in self.setupFilterList if el[0] == filt]) == 0):
                 excludedWarn = True
                 excludeList.append(filt)
+                if(filtPair[1] not in self.lineNums):
+                    self.lineNums.append(filtPair[1])
 
         issues = 0
         print("#"*100,'\n')
@@ -301,4 +311,4 @@ class MaskAndFilter():
     def checkMaskFilter(self, root, libraryAnalyzer):
         self._reset()
         totalIssues, messages = self._maskFilterCheck(root, libraryAnalyzer)
-        return totalIssues, messages
+        return totalIssues, messages, self.lineNums

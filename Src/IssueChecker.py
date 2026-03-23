@@ -175,9 +175,9 @@ Source code:
 
         # Library only detectable from files recieving data via masks/filters
         # TODO: add library check for sending files in different module
-        maskIssuesFound, maskIssueMessages = self.mask_filt_analyzer.checkMaskFilter(RootCursor, self.libraryAnalyzer)
+        maskIssuesFound, maskIssueMessages, maskIssueLineNums = self.mask_filt_analyzer.checkMaskFilter(RootCursor, self.libraryAnalyzer)
         issuesFound += maskIssuesFound
-        dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages}
+        dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages, "mf_lineNums": maskIssueLineNums}
 
         rtrIssuesFound, rtrIssueMessages = self.rtr_check_analyzer.checkRTRmode(RootCursor, self.libraryAnalyzer)
         issuesFound += rtrIssuesFound

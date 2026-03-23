@@ -644,7 +644,6 @@ Item {
         highContrastSelect.currentIndex = contrast
         contrast === 0 ? highContrastSelect.displayText = "Off" :  highContrastSelect.displayText = "On"
         colorWay.changeTheme(theme, contrast)
-        //colorWay.switchColorMode(theme)
         llmSelect.currentIndex = agent
         apiKeyInput.text = key
     }

@@ -103,9 +103,7 @@ ApplicationWindow {
             }
             else if(name === "allDeleted") {
                 savedModel.clear()
-            }
-            
-            
+            }  
         }
     }
 
