@@ -84,11 +84,11 @@ class IssueChecker():
     
 
     files = {
-        "mask_filt": "./aiExamples/mf_ex.txt",
-        "rtr": "./aiExamples/rtr_ex.txt",
-        "idLen": "./aiExamples/idbl_ex.txt",
-        "dataPack": "./aiExamples/dbp_ex.txt",
-        "dlc": "./aiExamples/dlc_ex.txt"
+        "mask_filt": "Src/aiExamples/mf_ex.txt",
+        "rtr": "Src/aiExamples/rtr_ex.txt",
+        "idLen": "Src/aiExamples/idbl_ex.txt",
+        "dataPack": "Src/aiExamples/dbp_ex.txt",
+        "dlc": "Src/aiExamples/dlc_ex.txt"
     }
 
     examples = {}
