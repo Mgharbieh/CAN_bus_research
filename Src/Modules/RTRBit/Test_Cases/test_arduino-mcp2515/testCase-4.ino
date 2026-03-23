@@ -11,7 +11,6 @@ void setup() {
   canMsg1.can_id  = 0x0F6 | CAN_RTR_FLAG;
 
   canMsg2.can_id  = 0x036 | CAN_RTR_FLAG;
-  canMsg2.can_dlc = 0;
 
   
   while (!Serial);

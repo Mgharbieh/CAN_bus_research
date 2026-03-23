@@ -148,15 +148,36 @@ class IDBitLength():
                                                     #pair.append("standard")
                                                     #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
                                                     #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
+
+                                                    for x in node.children:
+                                                        if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
+                                                            pair.append("extended") #frameIDList
+                                                            self.frameIDList.append(pair)
+                                                            pair = []
+                                                        elif(x.type == "identifier" and (x.text.decode() == "CAN_SFF_FLAG" or x.text.decode() == "CAN_RTR_FLAG")):
+                                                            pair.append("standard")
+                                                            self.frameIDList.append(pair)
+                                                            pair = []
+
                                                 elif(int(varDec.children[2].text.decode(),16) <= 0x7FF): 
                                                     self.mode = "standard"
                                                     pair.append("standard")
                                                     #pair.append("standard")
                                                     #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
                                                     #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
-                                                self.frameIDList.append(pair)
-                                                print(self.frameIDList)
-                                                pair = []
+
+                                                    for x in node.children:
+                                                        if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
+                                                            pair.append("extended") #frameIDList
+                                                            self.frameIDList.append(pair)
+                                                            pair = []
+                                                        elif(x.type == "identifier" and (x.text.decode() == "CAN_SFF_FLAG" or x.text.decode() == "CAN_RTR_FLAG")):
+                                                            pair.append("standard")
+                                                            self.frameIDList.append(pair)
+                                                            pair = []
+                                                # self.frameIDList.append(pair)
+                                                # print(self.frameIDList)
+                                                # pair = []
                         elif(node.type == "number_literal"):
                             pair.append(node.text.decode())
                             if(int(node.text.decode(),16) > 0x7FF):
