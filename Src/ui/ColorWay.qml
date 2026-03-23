@@ -18,7 +18,8 @@ Item {
         "separatorColor": "#b3b3b3",
         "gradientColor1": "#80FFFFFF",
         "gradientColor2": "#00FFFFFF",
-        "deleteIconSrc": "./assets/delete-light.png"
+        "deleteIconSrc": "./assets/delete-light.png",
+        "cecsIconSrc": "./assets/CECS_2.png"
     }
 
     property var lightModeHC: {
@@ -33,7 +34,8 @@ Item {
         "separatorColor": "#000000",     // Black lines instead of soft grey
         "gradientColor1": "#80FFFFFF",
         "gradientColor2": "#00FFFFFF",
-        "deleteIconSrc": "./assets/delete-lightHC.png"
+        "deleteIconSrc": "./assets/delete-lightHC.png",
+        "cecsIconSrc": "./assets/CECS_2.png"
     }
 
     property var darkMode: {
@@ -48,7 +50,8 @@ Item {
         "separatorColor": "#1A1A1A",
         "gradientColor1": "#80141414",
         "gradientColor2": "#00000000",
-        "deleteIconSrc": "./assets/delete-dark.png"
+        "deleteIconSrc": "./assets/delete-dark.png",
+        "cecsIconSrc": "./assets/CECS_dark.png"
     }
 
     property var darkModeHC: {
@@ -63,7 +66,8 @@ Item {
         "separatorColor": "#FFFFFF",    // White separators for clear sectioning
         "gradientColor1": "#80000000",
         "gradientColor2": "#00000000",
-        "deleteIconSrc": "./assets/delete-darkHC.png"
+        "deleteIconSrc": "./assets/delete-darkHC.png",
+        "cecsIconSrc": "./assets/CECS_dark_hc.png"
     }
 
     property var colorMode: lightMode
@@ -81,6 +85,7 @@ Item {
     property string gradientColor1: colorMode.gradientColor1
     property string gradientColor2: colorMode.gradientColor2
     property string deleteIconSrc: colorMode.deleteIconSrc
+    property string cecsIconSrc: colorMode.cecsIconSrc
 
     function switchColorMode(mode) {
         if(mode === 1) {

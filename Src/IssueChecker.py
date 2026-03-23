@@ -152,7 +152,6 @@ class IssueChecker():
             issuesFound = False
             exampleString = self.examples.get(type)
 
-
             for out in current:
                 if out.endswith("_issues") and current[out] > 0:
                     issuesFound = True
@@ -189,13 +188,13 @@ class IssueChecker():
 
         # Library only detectable from files recieving data via masks/filters
         # TODO: add library check for sending files in different module
-        maskIssuesFound, maskIssueMessages = self.mask_filt_analyzer.checkMaskFilter(RootCursor, self.libraryAnalyzer)
+        maskIssuesFound, maskIssueMessages, maskIssueLineNums = self.mask_filt_analyzer.checkMaskFilter(RootCursor, self.libraryAnalyzer)
         issuesFound += maskIssuesFound
-        dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages}
+        dataStream["mask_filt"] = {"mf_issues":maskIssuesFound, "mf_messages":maskIssueMessages, "mf_lineNums": maskIssueLineNums}
 
-        rtrIssuesFound, rtrIssueMessages = self.rtr_check_analyzer.checkRTRmode(RootCursor, self.libraryAnalyzer)
+        rtrIssuesFound, rtrIssueMessages, rtrLineNums = self.rtr_check_analyzer.checkRTRmode(RootCursor, self.libraryAnalyzer)
         issuesFound += rtrIssuesFound
-        dataStream["rtr"] = {"rtr_issues":rtrIssuesFound, "rtr_messages":rtrIssueMessages}
+        dataStream["rtr"] = {"rtr_issues":rtrIssuesFound, "rtr_messages":rtrIssueMessages, "rtr_lineNums":rtrLineNums}
 
         idLenIssuesFound, idLenIssueMessages = self.id_bit_length_analyzer.checkIDBitLength(RootCursor)
         issuesFound += idLenIssuesFound
@@ -211,7 +210,7 @@ class IssueChecker():
 
         dataStream["totalIssues"] = issuesFound
         
-        self.libraryAnalyzer.detectLibrary()
+        self.libraryAnalyzer.detectLibrary(RootCursor)
         library = self.libraryAnalyzer.libraryDescriptor
         
         return issuesFound, dataStream, sourceCode, library

@@ -187,6 +187,19 @@ ApplicationWindow {
                                     font.pixelSize: 25
                                     color: colorWay.textColor
                                     wrapMode: Text.NoWrap
+                                    z: 2
+                                }
+
+                                Rectangle {
+                                    id: codeHighlight
+                                    //anchors.fill: codeLine
+                                    anchors {
+                                        top: codeLine.top
+                                        left: codeLine.left
+                                    }
+                                    width: contentContainer.width
+                                    height: codeLine.height
+                                    color: code_color
                                 }
                             }
                         }
@@ -362,7 +375,7 @@ ApplicationWindow {
             Text {
                 anchors.centerIn: parent
                 font.pixelSize: 30
-                text: "LLM suggestions go here"
+                text: "No issues found!"
                 color: textColor
             }
         }
@@ -380,9 +393,23 @@ ApplicationWindow {
         windowRoot.title = infoStream.file_name
         infoTitleBar.setTitleText(infoStream.file_name)
         for (var i = 0; i < code.length; i++) {
+            var hilightColor = "transparent"
+            infoStream.mask_filt.mf_lineNums.forEach(function(item) {
+                if(item === i+1) {
+                    hilightColor = '#80FF0000'
+                }
+            })   
+
+            infoStream.rtr.rtr_lineNums.forEach(function(item) {
+                if(item === i+1) {
+                    hilightColor = '#80FF0000'
+                }
+            })
+            
             var line = {
                 "line_index": (i+1).toString().padStart(4, " "),
-                "code_line": code[i]
+                "code_line": code[i],
+                "code_color": hilightColor
             }
 
             textMeasurer.text = "    " + line.code_line
