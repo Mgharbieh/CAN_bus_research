@@ -23,9 +23,14 @@ void setup() {
   mcp2515.reset();
   mcp2515.setBitrate(CAN_125KBPS);
 
-    // Change mask values (only match upper bits)
+  // Change mask values (only match upper bits)
   mcp2515.setFilterMask(MCP2515::MASK0, false, 0x7F0);
   mcp2515.setFilterMask(MCP2515::MASK1, false, 0x7F0);
+
+  // // Different filter IDs
+  // mcp2515.setFilter(MCP2515::RXF0, false, 0x520);
+  // mcp2515.setFilter(MCP2515::RXF1, false, 0x521);
+  // mcp2515.setFilter(MCP2515::RXF2, false, 0x522);
 
   setFilterValues(mcp2515);
   mcp2515.setNormalMode();

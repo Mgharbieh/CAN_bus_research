@@ -43,7 +43,7 @@ OUTPUTS FOR THIS EXAMPLE:
 [
 A(n) standard ID Bit Length is set during frame initialization for 0x0F6 but uses a(n) extended flag when sending message.
 A(n) extended ID Bit Length is set during frame initialization for 0x12345678 but uses a(n) standard flag when sending message.
-A(n) extended ID Bit Length is set during frame initialization for 0x12345678 but uses a(n) standard flag when sending message.
+A(n) extended ID Bit Length is set during frame initialization for 0xFFF but uses a(n) standard flag when sending message.
 ]
 
 SOLUTIONS FOR THIS EXAMPLE:

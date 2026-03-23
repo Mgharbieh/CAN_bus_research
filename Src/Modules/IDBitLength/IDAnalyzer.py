@@ -67,7 +67,30 @@ class IDBitLength():
                                     )
                                 )
                             )
-                        )]
+                        )
+                        (expression_statement
+                            (assignment_expression
+                                (identifier) @ref_id
+                            ) @a_ex
+                        )
+                        (expression_statement
+                            (assignment_expression
+                                (field_expression
+                                    (identifier) @fd_id
+                                    (field_identifier) @func_name
+                                ) @fd_ex
+                                (binary_expression 
+                                    (identifier) @ref_id
+                                    (identifier) @flag
+                                ) @b_ex
+                            ) @a_ex
+                        )
+                        (declaration
+                            (init_declarator
+                                (number_literal) @var_id
+                            ) @var_dec
+                        )
+                        ]
                     ) @func_body (#eq? @func_name "can_id")
             )
         '''
@@ -90,16 +113,48 @@ class IDBitLength():
                                     if(int(field.text.decode(),16) > 0x7FF):
                                         self.mode = "extended"
                                         pair.append("extended")
+                                        for x in node.children:
+                                            if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
+                                                pair.append("extended") #frameIDList
+                                                self.frameIDList.append(pair)
+                                                pair = []
+                                            elif(x.type == "identifier" and x.text.decode() == "CAN_SFF_FLAG"):
+                                                pair.append("standard")
+                                                self.frameIDList.append(pair)
+                                                pair = []
                                     elif(int(field.text.decode(),16) <= 0x7FF):
                                         self.mode = "standard"
                                         pair.append("standard")
-                                if(field.type == "identifier"):
-                                    if(field.text.decode() == "CAN_EFF_FLAG"):
-                                        pair.append("extended") #frameIDList
-                                    else:
-                                        pair.append("standard")
-                            self.frameIDList.append(pair)
-                            pair = []
+                                        for x in node.children:
+                                            if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
+                                                pair.append("extended") #frameIDList
+                                                self.frameIDList.append(pair)
+                                                pair = []
+                                            elif(x.type == "identifier" and x.text.decode() == "CAN_SFF_FLAG"):
+                                                pair.append("standard")
+                                                self.frameIDList.append(pair)
+                                                pair = []
+                                elif(field.type == "identifier"):
+                                    varDecList = captures['var_dec']
+                                    varRefList = captures['ref_id']
+                                    for varDec in varDecList:
+                                        if(varDec.children[0].text.decode() == field.text.decode()):
+                                            pair.append(field.text.decode())
+                                            if(int(varDec.children[2].text.decode(),16) > 0x7FF):
+                                                self.mode = "extended"
+                                                pair.append("extended")
+                                                #pair.append("standard")
+                                                #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
+                                                #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
+                                            elif(int(varDec.children[2].text.decode(),16) <= 0x7FF): 
+                                                self.mode = "standard"
+                                                pair.append("standard")
+                                                #pair.append("standard")
+                                                #AFTER CHECKING THE ID, CHECK THE FLAG TO SEE IF IT MATCHES THE ID
+                                                #MAKE SURE YOU ADD THE FLAG RESULT TO PAIR BEFORE APPENDING TO FRAMELIST AND RESETTING
+                                            self.frameIDList.append(pair)
+                                            print(self.frameIDList)
+                                            pair = []
                         elif(node.type == "number_literal"):
                             pair.append(node.text.decode())
                             if(int(node.text.decode(),16) > 0x7FF):
@@ -113,6 +168,22 @@ class IDBitLength():
                             self.frameIDList.append(pair)
                             #print(self.frameIDList)
                             pair = []
+                        elif(node.type == "identifier"):
+                            varDecList = captures['var_dec']
+                            for varDec in varDecList:
+                                if(varDec.children[0].text.decode() == node.text.decode()):
+                                    pair.append(node.text.decode())
+                                    if(int(varDec.children[2].text.decode(),16) > 0x7FF):
+                                        self.mode = "extended"
+                                        pair.append("extended")
+                                        pair.append("standard")
+                                    elif(int(varDec.children[2].text.decode(),16) <= 0x7FF): 
+                                        self.mode = "standard"
+                                        pair.append("standard")
+                                        pair.append("standard")
+                                    self.frameIDList.append(pair)
+                                    print(self.frameIDList)
+                                    pair = []
 
         #Create Booleans for std and ext and set true when it sees them
 
@@ -431,11 +502,11 @@ class IDBitLength():
             return 0, ["No ID Bit Length usage found."]
         for frame in self.frameIDList:
             if(frame[1]==frame[2]):
-                print(frame[0] + " has no errors, " + frame[2] + " ID bit length is properly set and sent")
-                resultList.append(frame[0] + " has no errors, " + frame[2] + " ID bit length is properly set and sent")
+                print("'" + frame[0] + "' has no errors, " + frame[2] + " ID bit length is properly set and sent")
+                resultList.append("'" + frame[0] + "' has no errors, " + frame[2] + " ID bit length is properly set and sent")
             elif(frame[1]!=frame[2]):
-                print("A(n) " + frame[1] + " ID Bit Length is set during frame initialization for " + frame[0] + " but uses a(n) " + frame[2] + " flag when sending message.")
-                resultList.append("A(n) " + frame[1] + " ID Bit Length is set during frame initialization for " + frame[0] + " but uses a(n) " + frame[2] + " flag when sending message.")
+                print("A(n) " + frame[1] + " ID Bit Length is set during frame initialization for '" + frame[0] + "' but uses a(n) " + frame[2] + " flag when sending message.")
+                resultList.append("A(n) " + frame[1] + " ID Bit Length is set during frame initialization for '" + frame[0] + "' but uses a(n) " + frame[2] + " flag when sending message.")
                 issues += 1
 
         return issues, resultList
