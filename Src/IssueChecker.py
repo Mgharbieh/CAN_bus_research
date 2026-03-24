@@ -15,7 +15,13 @@ import Modules.DataBytePacking.DataByte_Analyzer as data_byte_packing
 import Modules.DataLength.dlc_analyzer as dlc_analyzer
 
 from langchain_ollama import ChatOllama as ai
+from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 class IssueSolution(BaseModel):
     issue_type: str = Field(description="Type of issue, e.g. Mask Filter")
@@ -36,6 +42,8 @@ If there are no issues, return an empty list.
 
 Rules:
 - Use the example only as a style guide, not as content to copy.
+- DO NOT COPY EXACT SOLUTIONS FROM THE EXAMPLE. The example is only to show how to format the solution, not what the solution should be.
+- IN YOUR SOLUTIONS, ALWAYS REFERENCE THE EXACT CODE AND REFERENCE THE PROPER SNIPPETS AND OBJECT NAMES.
 - Each issue must produce exactly one solution object.
 - Keep the solution specific to the provided source code.
 - Reference exact code lines or exact code snippets when possible.
@@ -113,13 +121,13 @@ class IssueChecker():
         elif(modelNum == 2):
             model = "gpt-4o"
         elif(modelNum == 3):
-            model = "opus-4"
+            model = "claude-3-7-sonnet-latest"
         elif(modelNum == 4):
             model = "gemini-2.0-pro"
 
         self.llm = ai(
                 model= model,
-                temperature = 0.3,
+                temperature = 0.7,
                 num_ctx = 8192,
                 num_predict = 600,
                 top_k = 30, 
@@ -128,6 +136,11 @@ class IssueChecker():
                 repeat_last_n= 128,
                 seed = 42
                 ).with_structured_output(IssueSolutionList)
+
+        # self.llm = ChatAnthropic(
+        #         model= model,
+        #         temperature = 0.7
+        # ).with_structured_output(IssueSolutionList)
         
         prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
@@ -146,6 +159,8 @@ class IssueChecker():
         )
     
     def llmSolve(self, dataStream, sourceCode):
+
+        # print(os.getenv("ANTHROPIC_API_KEY"))
 
         for type in ["mask_filt", "rtr", "idLen", "dataPack", "dlc"]:
             current = dataStream[type]

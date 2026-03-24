@@ -56,11 +56,11 @@ SOLUTIONS FOR THIS EXAMPLE:
     Issue Type: ID Bit Length
     Issue Number: 2
     Issue Messages: A(n) extended ID Bit Length is set during frame initialization for 0x12345678 but uses a(n) standard flag when sending message.
-    Solution: An extended length ID is assigned to 'canMsg1' yet it is missing a 'CAN_EFF_FLAG' flag to indicate an extended frame. In this case, because you do not utilize the flag, a standard ID length is expected. Change 'canMsg2.can_id  = 0x12345678;' to 'canMsg2.can_id  = 0x12345678 | CAN_EFF_FLAG;'
+    Solution: An extended length ID is assigned to 'canMsg2' yet it is missing a 'CAN_EFF_FLAG' flag to indicate an extended frame. In this case, because you do not utilize the flag, a standard ID length is expected. Change 'canMsg2.can_id  = 0x12345678;' to 'canMsg2.can_id  = 0x12345678 | CAN_EFF_FLAG;'
 
     Issue Type: ID Bit Length
     Issue Number: 3
     Issue Messages: A(n) extended ID Bit Length is set during frame initialization for 0xFFF but uses a(n) standard flag when sending message.
-    Solution: An extended length ID is assigned to 'canMsg1' yet it is missing a 'CAN_EFF_FLAG' flag to indicate an extended frame. Change 'canMsg2.can_id  = 0xFFF;' to 'canMsg2.can_id  = 0xFFF | CAN_EFF_FLAG;'
+    Solution: An extended length ID is assigned to 'canMsg3' yet it is missing a 'CAN_EFF_FLAG' flag to indicate an extended frame. Change 'canMsg3.can_id  = 0xFFF;' to 'canMsg3.can_id  = 0xFFF | CAN_EFF_FLAG;'
 
 ]

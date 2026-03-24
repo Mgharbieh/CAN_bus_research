@@ -192,7 +192,7 @@ class IDBitLength():
                             #print(self.frameIDList)
                             pair = []
                         elif(node.type == "identifier"):
-                            varDecList = captures['var_dec']
+                            varDecList = captures.get('var_dec',[])
                             for varDec in varDecList:
                                 if(varDec.children[0].text.decode() == node.text.decode()):
                                     pair.append(node.text.decode())
