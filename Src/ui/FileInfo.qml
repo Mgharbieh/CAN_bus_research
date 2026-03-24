@@ -85,8 +85,12 @@ ApplicationWindow {
                         implicitWidth: 6
                         radius: width / 2
                         color: colorWay.itemColor
+                        border.color: colorWay.accent1color
+                        border.width: {
+                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                            else {0}
+                        }
                         visible: vBar.visible
-
                     }
                     background: Rectangle {
                         implicitWidth: 10
@@ -111,6 +115,11 @@ ApplicationWindow {
                         implicitHeight: 7
                         radius: height / 2
                         color: colorWay.itemColor
+                        border.color: colorWay.accent1color
+                        border.width: {
+                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                            else {0}
+                        }
                         visible: hBar.visible
                     }
                     background: Rectangle {
@@ -171,6 +180,7 @@ ApplicationWindow {
                                     font.family: "Consolas"
                                     font.pixelSize: 25
                                     color: colorWay.textColor
+                                    z: 3
                                 }
 
                                 Rectangle {
@@ -178,6 +188,7 @@ ApplicationWindow {
                                     anchors { left: lineNum.right; leftMargin: 5; top: parent.top; bottom: parent.bottom }  
                                     width: 3
                                     color: colorWay.separatorColor
+                                    z: 1
                                 }
 
                                 Text {
@@ -187,19 +198,21 @@ ApplicationWindow {
                                     font.pixelSize: 25
                                     color: colorWay.textColor
                                     wrapMode: Text.NoWrap
-                                    z: 2
+                                    z: 3
                                 }
 
                                 Rectangle {
                                     id: codeHighlight
                                     //anchors.fill: codeLine
                                     anchors {
-                                        top: codeLine.top
-                                        left: codeLine.left
+                                        top: lineNum.top
+                                        left: lineNum.left
+                                        bottom: codeLine.bottom
                                     }
-                                    width: contentContainer.width
+                                    width: lineNum.width + contentContainer.width
                                     height: codeLine.height
                                     color: code_color
+                                    z:2
                                 }
                             }
                         }
@@ -263,6 +276,11 @@ ApplicationWindow {
                         implicitWidth: 6
                         radius: width / 2
                         color: colorWay.itemColor
+                        border.color: colorWay.accent1color
+                        border.width: {
+                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                            else {0}
+                        }
                         visible: vBar2.visible
                     }
                     background: Rectangle {
@@ -288,6 +306,11 @@ ApplicationWindow {
                         implicitHeight: 6
                         radius: height / 2
                         color: colorWay.itemColor
+                        border.color: colorWay.accent1color
+                        border.width: {
+                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                            else {0}
+                        }
                         visible: hBar2.visible
                     } 
                     background: Rectangle {
@@ -380,12 +403,13 @@ ApplicationWindow {
                 }
                 width: (aiIconImg.width) 
                 height: 80
+                color: "transparent"
                 visible: false
 
                 Rectangle {
                     id: aiIconImg
-                    width: 80 + Math.max(aiTopText.contentWidth, aiBottomText.contentWidth)
-                    height: 80
+                    width: 100 + Math.max(aiTopText.contentWidth, aiBottomText.contentWidth)
+                    height: 100
                     color: "transparent"
 
                     Image {
@@ -394,8 +418,8 @@ ApplicationWindow {
                             top: parent.top
                             left: parent.left
                         }
-                        width: 80
-                        height: 80
+                        width: 100
+                        height: 100
                         source: colorWay.noAiIconSrc
                         mipmap: true
                     }
@@ -418,12 +442,12 @@ ApplicationWindow {
                         anchors {
                             bottom: aiImg.bottom
                             left: aiImg.right
-                            bottomMargin: 10
+                            bottomMargin: 15
                         }
 
                         text: "Enable suggestions in 'Settings>LLM Model'"
                         font.pixelSize: 25
-                        color: colorWay.textColor
+                        color: colorWay.secondaryTextColor
                     }
                 }
             }
@@ -436,12 +460,13 @@ ApplicationWindow {
                 }
                 width: (noIssueIconImg.width) 
                 height: 80
+                color: "transparent"
                 visible: false
 
                 Rectangle {
                     id: noIssueIconImg
-                    width: 80 + Math.max(noIssueTopText.contentWidth, noIssueBottomText.contentWidth)
-                    height: 80
+                    width: 100 + Math.max(noIssueTopText.contentWidth, noIssueBottomText.contentWidth)
+                    height: 100
                     color: "transparent"
 
                     Image {
@@ -450,8 +475,8 @@ ApplicationWindow {
                             top: parent.top
                             left: parent.left
                         }
-                        width: 80
-                        height: 80
+                        width: 100
+                        height: 100
                         mipmap: true
                         source: colorWay.noIssueSrc
                     }
@@ -474,12 +499,12 @@ ApplicationWindow {
                         anchors {
                             bottom: noIssueImg.bottom
                             left: noIssueImg.right
-                            bottomMargin: 10
+                            bottomMargin: 15
                         }
 
                         text: "Yippiee!"
                         font.pixelSize: 25
-                        color: colorWay.textColor
+                        color: colorWay.secondaryTextColor
                     }
                 }
             }
@@ -492,6 +517,7 @@ ApplicationWindow {
                 }
                 width: (aiIconImg.width) 
                 height: 80
+                color: "transparent"
                 visible: false
 
                 Rectangle {
@@ -513,8 +539,7 @@ ApplicationWindow {
                         color: colorWay.textColor
                     }
                 }
-            }
-            
+            }   
         }
     }
 
@@ -523,10 +548,11 @@ ApplicationWindow {
         font.pixelSize: 28
     }
 
-    function setFileInfo(code, infoStream) {
+    function setFileInfo(code, dataStream) {
         console.log("setFileInfo called...")
         var temp = ""
 
+        var infoStream = dataStream.data
         windowRoot.title = infoStream.file_name
         infoTitleBar.setTitleText(infoStream.file_name)
         for (var i = 0; i < code.length; i++) {
@@ -589,17 +615,16 @@ ApplicationWindow {
             noIssueRect.visible = true
         }
         else {
-            if(infoStream.AI_Enabled === false) {
+            if(dataStream.AI_Enabled === false) {
                 noAiRect.visible = true
             }
             else {
                 var solutionText = ""
-                infoStream.solutions.forEach(function(item) {
+                dataStream.solutions.forEach(function(item) {
                     solutionText += (item + "\n")
                 })
             }
         }
-
         windowRoot.visible = true
     }
 }

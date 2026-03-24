@@ -33,7 +33,7 @@ class AnalysisWorker(QRunnable):
             self.signals.statusMessage.emit(False)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
-            fileData = {"library":lib, "data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified, "AI_Enabled":aiEnabled,"solutions": solutions}
+            fileData = {"library":lib, "dataStream":{"data":data, "AI_Enabled":aiEnabled,"solutions": solutions}, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
             if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
                 self.signals.analysisResult.emit(issueCount)
         except Exception as e:

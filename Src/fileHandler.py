@@ -60,7 +60,7 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
 
                 with open(self.save_dir / file_name, 'r') as file:
                     json_obj = json.load(file)
-                    file_data = json_obj["data"]
+                    file_data = json_obj["dataStream"]["data"]
                     saved_files.append({
                         "file_name": file_data["file_name"],
                         "totalIssues": file_data["totalIssues"]
@@ -96,8 +96,8 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
                 self.current_file = json.load(file)
 
             sourceCode = self.current_file["sourceCode"].split('\n')
-            data = self.current_file["data"]
-            return sourceCode, json.dumps(data)
+            dataStream = self.current_file["dataStream"]
+            return sourceCode, json.dumps(dataStream)
         except Exception as e:
             print(f"Error loading file: {e}")
             return None

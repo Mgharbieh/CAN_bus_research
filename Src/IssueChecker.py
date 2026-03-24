@@ -160,11 +160,11 @@ class IssueChecker():
     
     def llmSolve(self, dataStream, sourceCode):
         
+        solutionArray = []
         aiEnabled = True
         if(self.llm == None):
             aiEnabled = False
-
-        solutionArray = []
+            return solutionArray, aiEnabled
 
         #print(os.getenv("ANTHROPIC_API_KEY"))
 
