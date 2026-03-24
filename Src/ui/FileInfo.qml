@@ -395,153 +395,213 @@ ApplicationWindow {
             color: backgroundcolor2
             radius: 15
 
-            Rectangle {
-                id: noAiRect
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    verticalCenter: parent.verticalCenter
-                }
-                width: (aiIconImg.width) 
-                height: 80
-                color: "transparent"
-                visible: false
+            ScrollView {
+                id: viewSuggestions
+                anchors.fill: parent
+                anchors.margins: 6
+                clip: true 
 
-                Rectangle {
-                    id: aiIconImg
-                    width: 100 + Math.max(aiTopText.contentWidth, aiBottomText.contentWidth)
-                    height: 100
-                    color: "transparent"
+                contentWidth: suggestionTextRect.width
+                contentHeight: suggestionTextRect.height
 
-                    Image {
-                        id: aiImg
-                        anchors {
-                            top: parent.top
-                            left: parent.left
+                ScrollBar.vertical: ScrollBar {
+                    id: vBar3
+                    parent: viewSuggestions
+                    x: viewSuggestions.mirrored ? 0 : viewSuggestions.width - width
+                    y: viewSuggestions.topPadding
+                    height: viewSuggestions.availableHeight 
+                    policy: ScrollBar.AsNeeded
+                    interactive: true
+                    padding: 0
+
+                    visible: vBar3.size < 1.0
+
+                    contentItem: Rectangle {
+                        implicitWidth: 6
+                        radius: width / 2
+                        color: colorWay.itemColor
+                        border.color: colorWay.accent1color
+                        border.width: {
+                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                            else {0}
                         }
-                        width: 100
-                        height: 100
-                        source: colorWay.noAiIconSrc
-                        mipmap: true
+                        visible: vBar3.visible
                     }
-
-                    Text {
-                        id: aiTopText
-                        anchors {
-                            top: aiImg.top
-                            left: aiImg.right
-                            topMargin: 10
-                        }
-
-                        text: "AI suggestions are turned off!"
-                        font.pixelSize: 30
-                        color: colorWay.textColor
-                    }
-
-                    Text {
-                        id: aiBottomText
-                        anchors {
-                            bottom: aiImg.bottom
-                            left: aiImg.right
-                            bottomMargin: 15
-                        }
-
-                        text: "Enable suggestions in 'Settings>LLM Model'"
-                        font.pixelSize: 25
-                        color: colorWay.secondaryTextColor
+                    background: Rectangle {
+                        implicitWidth: 10
+                        color: backgroundcolor2
+                        visible: vBar3.visible
                     }
                 }
-            }
 
-            Rectangle {
-                id: noIssueRect
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    verticalCenter: parent.verticalCenter
-                }
-                width: (noIssueIconImg.width) 
-                height: 80
-                color: "transparent"
-                visible: false
+                ScrollBar.horizontal: ScrollBar {
+                    id: hBar3
+                    parent: viewSuggestions
+                    x: viewSuggestions.leftPadding
+                    y: viewSuggestions.height - height
+                    width: viewSuggestions.availableWidth
+                    policy: ScrollBar.AsNeeded
+                    hoverEnabled: false
+                    active: hovered || pressed
 
-                Rectangle {
-                    id: noIssueIconImg
-                    width: 100 + Math.max(noIssueTopText.contentWidth, noIssueBottomText.contentWidth)
-                    height: 100
-                    color: "transparent"
+                    visible: hBar3.size < 1.0
 
-                    Image {
-                        id: noIssueImg
-                        anchors {
-                            top: parent.top
-                            left: parent.left
+                    contentItem: Rectangle {
+                        implicitHeight: 6
+                        radius: height / 2
+                        color: colorWay.itemColor
+                        border.color: colorWay.accent1color
+                        border.width: {
+                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
+                            else {0}
                         }
-                        width: 100
-                        height: 100
-                        mipmap: true
-                        source: colorWay.noIssueSrc
-                    }
-
-                    Text {
-                        id: noIssueTopText
-                        anchors {
-                            top: noIssueImg.top
-                            left: noIssueImg.right
-                            topMargin: 10
-                        }
-
-                        text: "No Issues detected!"
-                        font.pixelSize: 30
-                        color: colorWay.textColor
-                    }
-
-                    Text {
-                        id: noIssueBottomText
-                        anchors {
-                            bottom: noIssueImg.bottom
-                            left: noIssueImg.right
-                            bottomMargin: 15
-                        }
-
-                        text: "Yippiee!"
-                        font.pixelSize: 25
-                        color: colorWay.secondaryTextColor
+                        visible: hBar3.visible
+                    } 
+                    background: Rectangle {
+                        implicitHeight: 10
+                        color: colorWay.backgroundcolor2
+                        opacity: 1
+                        visible: hBar3.visible
                     }
                 }
-            }
-
-            Rectangle {
-                id: aiSuggestionRect
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    verticalCenter: parent.verticalCenter
-                }
-                width: (aiIconImg.width) 
-                height: 80
-                color: "transparent"
-                visible: false
 
                 Rectangle {
                     id: suggestionTextRect
-                    width: suggestionTextBox.contentWidth
-                    height: suggestionTextBox.contentHeight
+                    width: suggestionTextBox.contentWidth + 10
+                    height: suggestionTextBox.contentHeight + 10
                     color: "transparent"
+                    visible: false
 
                     Text {
                         id: suggestionTextBox
                         anchors {
-                            top: aiImg.top
+                            top: parent.top
                             left: parent.left
-                            topMargin: 10
+                            margins: 5
+                        }
+                        text: ""
+                        font.pixelSize: 25
+                        color: colorWay.textColor
+                    }
+                }
+
+                Rectangle {
+                    id: noAiRect
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                    width: (aiIconImg.width) 
+                    height: 80
+                    color: "transparent"
+                    visible: false
+
+                    Rectangle {
+                        id: aiIconImg
+                        width: 100 + Math.max(aiTopText.contentWidth, aiBottomText.contentWidth)
+                        height: 100
+                        color: "transparent"
+
+                        Image {
+                            id: aiImg
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                            }
+                            width: 100
+                            height: 100
+                            source: colorWay.noAiIconSrc
+                            mipmap: true
                         }
 
-                        text: ""
-                        font.pixelSize: 30
-                        color: colorWay.textColor
+                        Text {
+                            id: aiTopText
+                            anchors {
+                                top: aiImg.top
+                                left: aiImg.right
+                                topMargin: 10
+                            }
+
+                            text: "AI suggestions are turned off!"
+                            font.pixelSize: 30
+                            color: colorWay.textColor
+                        }
+
+                        Text {
+                            id: aiBottomText
+                            anchors {
+                                bottom: aiImg.bottom
+                                left: aiImg.right
+                                bottomMargin: 15
+                            }
+
+                            text: "Enable suggestions: 'Settings>LLM Model'"
+                            font.pixelSize: 25
+                            color: colorWay.secondaryTextColor
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: noIssueRect
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                    width: (noIssueIconImg.width) 
+                    height: 80
+                    color: "transparent"
+                    visible: false
+
+                    Rectangle {
+                        id: noIssueIconImg
+                        width: 100 + Math.max(noIssueTopText.contentWidth, noIssueBottomText.contentWidth)
+                        height: 100
+                        color: "transparent"
+
+                        Image {
+                            id: noIssueImg
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                            }
+                            width: 100
+                            height: 100
+                            mipmap: true
+                            source: colorWay.noIssueSrc
+                        }
+
+                        Text {
+                            id: noIssueTopText
+                            anchors {
+                                top: noIssueImg.top
+                                left: noIssueImg.right
+                                topMargin: 10
+                            }
+
+                            text: "No Issues detected!"
+                            font.pixelSize: 30
+                            color: colorWay.textColor
+                        }
+
+                        Text {
+                            id: noIssueBottomText
+                            anchors {
+                                bottom: noIssueImg.bottom
+                                left: noIssueImg.right
+                                bottomMargin: 15
+                            }
+
+                            text: "Yippiee!"
+                            font.pixelSize: 25
+                            color: colorWay.secondaryTextColor
+                        }
                     }
                 }
             }   
         }
     }
+    
 
     TextMetrics {
         id: textMeasurer
@@ -623,6 +683,9 @@ ApplicationWindow {
                 dataStream.solutions.forEach(function(item) {
                     solutionText += (item + "\n")
                 })
+                suggestionTextBox.text = solutionText
+                suggestionTextRect.visible = true
+                console.log("width:", suggestionTextRect.width, suggestionRect.width)
             }
         }
         windowRoot.visible = true
