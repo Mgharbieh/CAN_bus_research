@@ -52,6 +52,12 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
         saved_files = []
         try:
             for file_name in os.listdir(self.save_dir):
+                file_path = self.save_dir / file_name
+                print(f"Trying to open: {file_path}")
+
+                if file_path.suffix.lower() != ".json":
+                    continue
+
                 with open(self.save_dir / file_name, 'r') as file:
                     json_obj = json.load(file)
                     file_data = json_obj["data"]

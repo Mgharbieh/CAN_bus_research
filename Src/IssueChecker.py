@@ -23,61 +23,7 @@ class IssueSolution(BaseModel):
     issue_message: str = Field(description="Original issue message")
     solution: str = Field(description="Concrete fix for the issue")
 
-class IssueSolutionList(BaseModel):
-    solutions: List[IssueSolution]
-
-class IssueChecker():
-
-    
-
-    def __init__(self):  
-        self.libraryAnalyzer = libraryDetector.LibraryDetector()
-        self.mask_filt_analyzer = mask_filt.MaskAndFilter()
-        self.rtr_check_analyzer = RTR_Check.RTRBitChecker()
-        self.id_bit_length_analyzer = id_analyzer.IDBitLength()
-        self.data_byte_packing_analyzer = data_byte_packing.DataBytePackingAnalyzer()
-        self.data_length_analyzer = dlc_analyzer.DLCAnalyzer()
-
-    outputStructure =   "Issue Type: (insert type here) \n"\
-                        "Issue Number: (insert bug number here) \n"\
-                        "Issue Messages: (insert issue message here) \n"\
-                        "Solution: (insert solution here) \n"\
-          
-    
-
-    files = {
-        "mask_filt": "./aiExamples/mf_ex.txt",
-        "rtr": "./aiExamples/rtr_ex.txt",
-        "idLen": "./aiExamples/idbl_ex.txt",
-        "dataPack": "./aiExamples/dbp_ex.txt",
-        "dlc": "./aiExamples/dlc_ex.txt"
-    }
-
-    examples = {}
-
-    try:
-        for key, path in files.items():
-            with open(path, "r") as f:
-                examples[key] = f.read()
-
-    except FileNotFoundError as e:
-        print(f"Error: File not found -> {e.filename}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-    llm = ai(
-            model="llama3",
-            temperature = 0.3,
-            num_ctx = 8192,
-            num_predict = 600,
-            top_k = 30, 
-            top_p = 0.9,
-            repeat_penalty = 1.1,
-            repeat_last_n= 128,
-            seed = 42
-            ).with_structured_output(IssueSolutionList)
-        
-    SYSTEM_PROMPT = """
+SYSTEM_PROMPT = """
 You are a code analysis assistant for CAN bus code.
 
 The CAN Libraries you will be analysing are the following so maintain their syntax and semantics in your solutions:
@@ -100,7 +46,7 @@ Rules:
 - Focus on providing actionable solutions that directly address the issue messages.
 """
 
-    HUMAN_PROMPT = """
+HUMAN_PROMPT = """
 Issue category: {issue_type}
 
 Example problem and example solution format:
@@ -112,15 +58,84 @@ Current issue messages:
 Source code:
 {source_code}
 """ 
+
+class IssueSolutionList(BaseModel):
+    solutions: List[IssueSolution]
+
+class IssueChecker():
+
+    
+
+    def __init__(self):  
+        self.libraryAnalyzer = libraryDetector.LibraryDetector()
+        self.mask_filt_analyzer = mask_filt.MaskAndFilter()
+        self.rtr_check_analyzer = RTR_Check.RTRBitChecker()
+        self.id_bit_length_analyzer = id_analyzer.IDBitLength()
+        self.data_byte_packing_analyzer = data_byte_packing.DataBytePackingAnalyzer()
+        self.data_length_analyzer = dlc_analyzer.DLCAnalyzer()
+        self.llm = None
+        self.chain = None
+
+    outputStructure =   "Issue Type: (insert type here) \n"\
+                        "Issue Number: (insert bug number here) \n"\
+                        "Issue Messages: (insert issue message here) \n"\
+                        "Solution: (insert solution here) \n"\
+          
+    
+
+    files = {
+        "mask_filt": "Src/aiExamples/mf_ex.txt",
+        "rtr": "Src/aiExamples/rtr_ex.txt",
+        "idLen": "Src/aiExamples/idbl_ex.txt",
+        "dataPack": "Src/aiExamples/dbp_ex.txt",
+        "dlc": "Src/aiExamples/dlc_ex.txt"
+    }
+
+    examples = {}
+
+    try:
+        for key, path in files.items():
+            with open(path, "r") as f:
+                examples[key] = f.read()
+
+    except FileNotFoundError as e:
+        print(f"Error: File not found -> {e.filename}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    def initAI(self, modelNum):
+        model = ""
+        if(modelNum == 0):
+            self.llm = None
+            return
+        elif(modelNum == 1):
+            model = "llama3"
+        elif(modelNum == 2):
+            model = "gpt-4o"
+        elif(modelNum == 3):
+            model = "opus-4"
+        elif(modelNum == 4):
+            model = "gemini-2.0-pro"
+
+        self.llm = ai(
+                model= model,
+                temperature = 0.3,
+                num_ctx = 8192,
+                num_predict = 600,
+                top_k = 30, 
+                top_p = 0.9,
+                repeat_penalty = 1.1,
+                repeat_last_n= 128,
+                seed = 42
+                ).with_structured_output(IssueSolutionList)
         
-
-
-    prompt = ChatPromptTemplate.from_messages([
+        prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("human", HUMAN_PROMPT)
-    ])
+        ])
 
-    chain = prompt | llm
+        self.chain = prompt | self.llm
+        
 
     def render_solution(self, item: IssueSolution) -> str:
         return (
@@ -153,8 +168,6 @@ Source code:
                         print(self.render_solution(item))
                 if out.endswith("_messages") and not issuesFound:
                     print(f"No solution necessary for {type}.")
-            
-            
             
     
     def analyzeFile(self, inputFile):

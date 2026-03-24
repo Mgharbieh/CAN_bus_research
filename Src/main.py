@@ -28,9 +28,9 @@ class AnalysisWorker(QRunnable):
         try:
             issueCount, data, code, lib = self.checker.analyzeFile(self.path)
             print("")
-            #self.signals.statusMessage.emit(True)
-            #self.checker.llmSolve(data, code)
-            #self.signals.statusMessage.emit(False)
+            self.signals.statusMessage.emit(True)
+            self.checker.llmSolve(data, code)
+            self.signals.statusMessage.emit(False)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
             fileData = {"library":lib, "data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
@@ -99,6 +99,7 @@ class AnalysisInterface(QObject):
         self.fileManager = fileHandler.FileHandler()
         self.checker = IssueChecker.IssueChecker()
         self.threadPool = QThreadPool()
+        
 
     def loadConfiguration(self):
         config, apiKey = self.fileManager.loadConfig()
@@ -110,6 +111,8 @@ class AnalysisInterface(QObject):
                 apiKey or ""
             )
 
+            self.checker.initAI(config.get("aiAgent", 0))
+    
     def updateConfiguration(self, key, value):
         self.fileManager.updateConfig(key, value)
 
