@@ -508,7 +508,7 @@ Item {
                     anchors.leftMargin: 5
                     height: 40
                     color: "transparent"
-                    visible: llmSelect.currentIndex === 0 ? false : true
+                    visible: llmSelect.currentIndex <= 1 ? false : true
 
                     Text {
                         id: apiKeyInputText
@@ -553,7 +553,7 @@ Item {
                                 bottom: parent.bottom
                                 margins: 5
                             }
-                            visible: apiKeyInput.length > 0 ? false : true
+                            visible: apiKeyInput.length > 1 ? false : true
                             text: "Enter API key..."
                             color: colorWay.itemColor
                             minimumPixelSize: 12
@@ -597,7 +597,7 @@ Item {
                     height: 3
                     radius: 3
                     color: colorWay.separatorColor
-                    visible: aiAgentRect.selectedAgent === 0 ? false : true
+                    visible: aiAgentRect.selectedAgent <= 1 ? false : true
                 }
             }
         } 

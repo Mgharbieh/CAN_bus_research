@@ -372,12 +372,149 @@ ApplicationWindow {
             color: backgroundcolor2
             radius: 15
 
-            Text {
-                anchors.centerIn: parent
-                font.pixelSize: 30
-                text: "No issues found!"
-                color: textColor
+            Rectangle {
+                id: noAiRect
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                width: (aiIconImg.width) 
+                height: 80
+                visible: false
+
+                Rectangle {
+                    id: aiIconImg
+                    width: 80 + Math.max(aiTopText.contentWidth, aiBottomText.contentWidth)
+                    height: 80
+                    color: "transparent"
+
+                    Image {
+                        id: aiImg
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                        }
+                        width: 80
+                        height: 80
+                        source: colorWay.noAiIconSrc
+                        mipmap: true
+                    }
+
+                    Text {
+                        id: aiTopText
+                        anchors {
+                            top: aiImg.top
+                            left: aiImg.right
+                            topMargin: 10
+                        }
+
+                        text: "AI suggestions are turned off!"
+                        font.pixelSize: 30
+                        color: colorWay.textColor
+                    }
+
+                    Text {
+                        id: aiBottomText
+                        anchors {
+                            bottom: aiImg.bottom
+                            left: aiImg.right
+                            bottomMargin: 10
+                        }
+
+                        text: "Enable suggestions in 'Settings>LLM Model'"
+                        font.pixelSize: 25
+                        color: colorWay.textColor
+                    }
+                }
             }
+
+            Rectangle {
+                id: noIssueRect
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                width: (noIssueIconImg.width) 
+                height: 80
+                visible: false
+
+                Rectangle {
+                    id: noIssueIconImg
+                    width: 80 + Math.max(noIssueTopText.contentWidth, noIssueBottomText.contentWidth)
+                    height: 80
+                    color: "transparent"
+
+                    Image {
+                        id: noIssueImg
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                        }
+                        width: 80
+                        height: 80
+                        mipmap: true
+                        source: colorWay.noIssueSrc
+                    }
+
+                    Text {
+                        id: noIssueTopText
+                        anchors {
+                            top: noIssueImg.top
+                            left: noIssueImg.right
+                            topMargin: 10
+                        }
+
+                        text: "No Issues detected!"
+                        font.pixelSize: 30
+                        color: colorWay.textColor
+                    }
+
+                    Text {
+                        id: noIssueBottomText
+                        anchors {
+                            bottom: noIssueImg.bottom
+                            left: noIssueImg.right
+                            bottomMargin: 10
+                        }
+
+                        text: "Yippiee!"
+                        font.pixelSize: 25
+                        color: colorWay.textColor
+                    }
+                }
+            }
+
+            Rectangle {
+                id: aiSuggestionRect
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                width: (aiIconImg.width) 
+                height: 80
+                visible: false
+
+                Rectangle {
+                    id: suggestionTextRect
+                    width: suggestionTextBox.contentWidth
+                    height: suggestionTextBox.contentHeight
+                    color: "transparent"
+
+                    Text {
+                        id: suggestionTextBox
+                        anchors {
+                            top: aiImg.top
+                            left: parent.left
+                            topMargin: 10
+                        }
+
+                        text: ""
+                        font.pixelSize: 30
+                        color: colorWay.textColor
+                    }
+                }
+            }
+            
         }
     }
 
@@ -447,7 +584,22 @@ ApplicationWindow {
            temp += ("• " + item) + "\n"
         })
         bytePackingPane.populateModule("Data Byte Packing (" + infoStream.dataPack.dataPack_issues + ")", temp)
-        
+
+        if(infoStream.totalIssues === 0) {
+            noIssueRect.visible = true
+        }
+        else {
+            if(infoStream.AI_Enabled === false) {
+                noAiRect.visible = true
+            }
+            else {
+                var solutionText = ""
+                infoStream.solutions.forEach(function(item) {
+                    solutionText += (item + "\n")
+                })
+            }
+        }
+
         windowRoot.visible = true
     }
 }

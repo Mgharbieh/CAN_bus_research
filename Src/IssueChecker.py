@@ -15,7 +15,7 @@ import Modules.DataBytePacking.DataByte_Analyzer as data_byte_packing
 import Modules.DataLength.dlc_analyzer as dlc_analyzer
 
 from langchain_ollama import ChatOllama as ai
-from langchain_anthropic import ChatAnthropic
+#from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 
 from dotenv import load_dotenv
@@ -159,6 +159,10 @@ class IssueChecker():
         )
     
     def llmSolve(self, dataStream, sourceCode):
+        
+        aiEnabled = True
+        if(self.llm == None):
+            aiEnabled = False
 
         solutionArray = []
 
@@ -186,7 +190,7 @@ class IssueChecker():
                         print(self.render_solution(item))
                 if out.endswith("_messages") and not issuesFound:
                     print(f"No solution necessary for {type}.")
-        return solutionArray
+        return solutionArray, aiEnabled
             
     
     def analyzeFile(self, inputFile):

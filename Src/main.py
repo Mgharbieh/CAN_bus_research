@@ -29,11 +29,11 @@ class AnalysisWorker(QRunnable):
             issueCount, data, code, lib = self.checker.analyzeFile(self.path)
             print("")
             self.signals.statusMessage.emit(True)
-            solutions = self.checker.llmSolve(data, code)
+            solutions, aiEnabled = self.checker.llmSolve(data, code)
             self.signals.statusMessage.emit(False)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
-            fileData = {"library":lib, "data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified, "solutions": solutions}
+            fileData = {"library":lib, "data":data, "sourceCode":code, "path":self.path, "lastEdited": lastModified, "AI_Enabled":aiEnabled,"solutions": solutions}
             if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
                 self.signals.analysisResult.emit(issueCount)
         except Exception as e:

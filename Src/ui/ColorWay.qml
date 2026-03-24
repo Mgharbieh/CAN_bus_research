@@ -19,7 +19,9 @@ Item {
         "gradientColor1": "#80FFFFFF",
         "gradientColor2": "#00FFFFFF",
         "deleteIconSrc": "./assets/delete-light.png",
-        "cecsIconSrc": "./assets/CECS_2.png"
+        "cecsIconSrc": "./assets/CECS_2.png",
+        "noAiIconSrc": "./assets/robot_black.png",
+        "noIssueSrc": "./assets/confetti_black.png"
     }
 
     property var lightModeHC: {
@@ -35,7 +37,9 @@ Item {
         "gradientColor1": "#80FFFFFF",
         "gradientColor2": "#00FFFFFF",
         "deleteIconSrc": "./assets/delete-lightHC.png",
-        "cecsIconSrc": "./assets/CECS_2.png"
+        "cecsIconSrc": "./assets/CECS_2.png",
+        "noAiIconSrc": "./assets/robot_black.png",
+        "noIssueSrc": "./assets/confetti_black.png"
     }
 
     property var darkMode: {
@@ -51,7 +55,9 @@ Item {
         "gradientColor1": "#80141414",
         "gradientColor2": "#00000000",
         "deleteIconSrc": "./assets/delete-dark.png",
-        "cecsIconSrc": "./assets/CECS_dark.png"
+        "cecsIconSrc": "./assets/CECS_dark.png",
+        "noAiIconSrc": "./assets/robot_white.png",
+        "noIssueSrc": "./assets/confetti_white.png"
     }
 
     property var darkModeHC: {
@@ -67,7 +73,9 @@ Item {
         "gradientColor1": "#80000000",
         "gradientColor2": "#00000000",
         "deleteIconSrc": "./assets/delete-darkHC.png",
-        "cecsIconSrc": "./assets/CECS_dark_hc.png"
+        "cecsIconSrc": "./assets/CECS_dark_hc.png",
+        "noAiIconSrc": "./assets/robot_white.png",
+        "noIssueSrc": "./assets/confetti_white.png"
     }
 
     property var colorMode: lightMode
@@ -86,6 +94,8 @@ Item {
     property string gradientColor2: colorMode.gradientColor2
     property string deleteIconSrc: colorMode.deleteIconSrc
     property string cecsIconSrc: colorMode.cecsIconSrc
+    property string noAiIconSrc: colorMode.noAiIconSrc
+    property string noIssueSrc: colorMode.noIssueSrc
 
     function switchColorMode(mode) {
         if(mode === 1) {
