@@ -160,6 +160,8 @@ class IssueChecker():
     
     def llmSolve(self, dataStream, sourceCode):
 
+        solutionArray = []
+
         # print(os.getenv("ANTHROPIC_API_KEY"))
 
         for type in ["mask_filt", "rtr", "idLen", "dataPack", "dlc"]:
@@ -180,9 +182,11 @@ class IssueChecker():
                         "source_code": sourceCode,
                     })
                     for item in result.solutions:
+                        solutionArray.append(self.render_solution(item))
                         print(self.render_solution(item))
                 if out.endswith("_messages") and not issuesFound:
                     print(f"No solution necessary for {type}.")
+        return solutionArray
             
     
     def analyzeFile(self, inputFile):
