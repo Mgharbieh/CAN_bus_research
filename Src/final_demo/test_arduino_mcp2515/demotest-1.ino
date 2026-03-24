@@ -9,7 +9,7 @@ MCP2515 mcp2515(10);
 
 
 void setup() {
-  canMsg1.can_id  = 0x0F6;
+  canMsg1.can_id  = 0x0F6 | CAN_SFF_FLAG;
   canMsg1.can_dlc = 8;
   canMsg1.data[0] = 0x8E;
   canMsg1.data[1] = 0x87;
@@ -20,7 +20,7 @@ void setup() {
   canMsg1.data[6] = 0xBE;
   canMsg1.data[7] = 0x86;
 
-  canMsg2.can_id  = 0x12345678 | CAN_EFF_FLAG;
+  canMsg2.can_id  = 0x15555578 | CAN_SFF_FLAG;
   canMsg2.can_dlc = 8;
   canMsg2.data[0] = 0x0E;
   canMsg2.data[1] = 0x00;

@@ -43,7 +43,7 @@ If there are no issues, return an empty list.
 Rules:
 - Use the example only as a style guide, not as content to copy.
 - DO NOT COPY EXACT SOLUTIONS FROM THE EXAMPLE. The example is only to show how to format the solution, not what the solution should be.
-- IN YOUR SOLUTIONS, ALWAYS REFERENCE THE EXACT CODE AND REFERENCE THE PROPER SNIPPETS AND OBJECT NAMES.
+- In the solution make sure all the variables used have corresponding definitions.
 - Each issue must produce exactly one solution object.
 - Keep the solution specific to the provided source code.
 - Reference exact code lines or exact code snippets when possible.
@@ -53,7 +53,7 @@ Rules:
 - Flags like 'CAN_RTR_FLAG' or 'CAN_SFF_FLAG' (or similar depending on the library) may be utilized and sometimes you may need to infer the intent of a code snippet to understand the issue before assuming changes need to be made.
 - Focus on providing actionable solutions that directly address the issue messages.
 """
-
+#IN YOUR SOLUTIONS, ALWAYS REFERENCE THE EXACT CODE AND REFERENCE THE PROPER SNIPPETS AND OBJECT NAMES.
 HUMAN_PROMPT = """
 Issue category: {issue_type}
 
@@ -166,7 +166,7 @@ class IssueChecker():
 
         solutionArray = []
 
-        # print(os.getenv("ANTHROPIC_API_KEY"))
+        #print(os.getenv("ANTHROPIC_API_KEY"))
 
         for type in ["mask_filt", "rtr", "idLen", "dataPack", "dlc"]:
             current = dataStream[type]
