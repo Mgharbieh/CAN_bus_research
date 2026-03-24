@@ -200,11 +200,14 @@ class RTRBitChecker:
                                     else:
                                         pair.insert(1, False)
                                         pair.insert(2, None)
-                                        pair.insert(3, lineNum)
+                                        pair.insert(3, lineNumber)
                                         self.msgList.append(pair.copy())
 
                 for idx in range(0, len(self.msgList)):
                     msg = self.msgList[idx]
+                    if(len(msg) < 4):
+                        continue
+                    
                     can_obj = msg[2]
                     line_number = msg[3]
 
