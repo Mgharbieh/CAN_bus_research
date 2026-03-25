@@ -487,14 +487,12 @@ ApplicationWindow {
 
                 Rectangle {
                     id: noAiRect
-                    anchors {
-                        horizontalCenter: parent.horizontalCenter
-                        verticalCenter: parent.verticalCenter
-                    }
                     width: (aiIconImg.width) 
                     height: 80
                     color: "transparent"
                     visible: false
+                    x: (suggestionRect.width - width) / 2
+                    y: (suggestionRect.height - height) / 2
 
                     Rectangle {
                         id: aiIconImg
@@ -544,14 +542,12 @@ ApplicationWindow {
 
                 Rectangle {
                     id: noIssueRect
-                    anchors {
-                        horizontalCenter: parent.horizontalCenter
-                        verticalCenter: parent.verticalCenter
-                    }
                     width: (noIssueIconImg.width) 
                     height: 80
                     color: "transparent"
                     visible: false
+                    x: (suggestionRect.width - width) / 2
+                    y: (suggestionRect.height - height) / 2
 
                     Rectangle {
                         id: noIssueIconImg
