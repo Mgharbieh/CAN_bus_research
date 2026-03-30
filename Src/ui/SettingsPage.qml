@@ -478,7 +478,7 @@ Item {
                         id: llmSelect
                         height: parent.height * 0.6
                         width: 120
-                        model: ["Off (No AI)","Llama3", "ChatGPT", "Claude", "Gemini"]   //add others??
+                        model: ["Off (No AI)","Llama3", "DeepSeek", "ChatGPT", "Claude", "Gemini"]   //add others??
                         editable: false
                         onActivated: { 
                             displayText = currentText

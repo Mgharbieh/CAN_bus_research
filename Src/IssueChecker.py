@@ -119,10 +119,12 @@ class IssueChecker():
         elif(modelNum == 1):
             model = "llama3"
         elif(modelNum == 2):
-            model = "gpt-4o"
+            model = "deepseek-chat"
         elif(modelNum == 3):
-            model = "claude-3-7-sonnet-latest"
+            model = "gpt-4o"
         elif(modelNum == 4):
+            model = "claude-3-7-sonnet-latest"
+        elif(modelNum == 5):
             model = "gemini-2.0-pro"
 
         self.llm = ai(
