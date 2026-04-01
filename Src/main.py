@@ -29,13 +29,14 @@ class AnalysisWorker(QRunnable):
             issueCount, data, code, lib = self.checker.analyzeFile(self.path)
             print("")
             self.signals.statusMessage.emit(True)
+            #self.checker.llmSolveSingle("mask_filt", "Example issue message for mask filter issue.", "Example source code snippet related to mask filter issue.")
             solutions, aiEnabled = self.checker.llmSolve(data, code)
             self.signals.statusMessage.emit(False)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
             fileData = {"library":lib, "dataStream":{"data":data, "AI_Enabled":aiEnabled,"solutions": solutions}, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
             if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
-                self.signals.analysisResult.emit(issueCount)
+               self.signals.analysisResult.emit(issueCount)
         except Exception as e:
             print(f"Error in worker: {e}")
 

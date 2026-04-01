@@ -17,11 +17,13 @@ import Modules.DataLength.dlc_analyzer as dlc_analyzer
 from langchain_ollama import ChatOllama as ai
 #from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_deepseek import ChatDeepSeek
 
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv(dotenv_path="/Users/abrahamabdulkarim/Documents/StatiCAN/.env")
+print("API KEY:", os.getenv("API_KEY"))
 
 class IssueSolution(BaseModel):
     issue_type: str = Field(description="Type of issue, e.g. Mask Filter")
@@ -143,6 +145,12 @@ class IssueChecker():
         #         model= model,
         #         temperature = 0.7
         # ).with_structured_output(IssueSolutionList)
+
+        # self.llm = ChatDeepSeek(
+        #         model= "deepseek-chat",
+        #         temperature = 0.7,
+        #         api_key= os.getenv("API_KEY")
+        # ).with_structured_output(IssueSolutionList)
         
         prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
@@ -160,6 +168,29 @@ class IssueChecker():
             f"Solution: {item.solution}\n"
         )
     
+    def llmSolveSingle(self, issue_type, message, source_code):
+        
+        solutionArray = []
+        aiEnabled = True
+        if(self.llm == None):
+            aiEnabled = False
+            return solutionArray, aiEnabled
+
+        exampleString = self.examples.get(issue_type)
+
+        result = self.chain.invoke({
+            "issue_type": issue_type,
+            "example": exampleString,
+            "messages": message,
+            "source_code": source_code,
+        })
+        for item in result.solutions:
+            solutionArray.append(self.render_solution(item))
+            print(self.render_solution(item))
+        
+        return solutionArray, aiEnabled
+    
+    
     def llmSolve(self, dataStream, sourceCode):
         
         solutionArray = []
@@ -168,7 +199,7 @@ class IssueChecker():
             aiEnabled = False
             return solutionArray, aiEnabled
 
-        #print(os.getenv("ANTHROPIC_API_KEY"))
+        print(os.getenv("API_KEY"))
 
         for type in ["mask_filt", "rtr", "idLen", "dataPack", "dlc"]:
             current = dataStream[type]
