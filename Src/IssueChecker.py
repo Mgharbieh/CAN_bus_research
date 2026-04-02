@@ -17,7 +17,7 @@ import Modules.DataLength.dlc_analyzer as dlc_analyzer
 from langchain_ollama import ChatOllama as ai
 #from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_deepseek import ChatDeepSeek
+#from langchain_deepseek import ChatDeepSeek
 
 from dotenv import load_dotenv
 import os
@@ -168,13 +168,26 @@ class IssueChecker():
             f"Solution: {item.solution}\n"
         )
     
+    def grabIssues(self, dataStream):
+        AI_solutions = {}
+        for type in ["mask_filt", "rtr", "idLen", "dataPack", "dlc"]:
+            current = dataStream[type]
+            for out in current:
+                if out.endswith("_issues") and current[out] > 0:
+                    AI_solutions[type] = {"hasIssues":True, "cached":False, "solution":[]}
+                    continue
+                elif out.endswith("_issues") and current[out] == 0: 
+                    AI_solutions[type] = {"hasIssues":False, "cached":False, "solution":[]}
+                    continue
+        return AI_solutions
+
     def llmSolveSingle(self, issue_type, message, source_code):
         
         solutionArray = []
         aiEnabled = True
         if(self.llm == None):
             aiEnabled = False
-            return solutionArray, aiEnabled
+            return solutionArray
 
         exampleString = self.examples.get(issue_type)
 
@@ -188,8 +201,7 @@ class IssueChecker():
             solutionArray.append(self.render_solution(item))
             print(self.render_solution(item))
         
-        return solutionArray, aiEnabled
-    
+        return solutionArray
     
     def llmSolve(self, dataStream, sourceCode):
         

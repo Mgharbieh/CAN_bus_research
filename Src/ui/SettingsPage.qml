@@ -486,6 +486,12 @@ Item {
                             root.configUpdated("aiAgent", llmSelect.currentIndex)
                             apiKeyInput.text = ""
                             root.storeAPIKey("API_KEY", "")
+                            if(llmSelect.currentIndex > 0) {
+                                root.aiEnabled = true
+                            }
+                            else {
+                                root.aiEnabled = false
+                            }
                         }
                     }      
                 }

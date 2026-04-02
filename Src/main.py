@@ -14,6 +14,7 @@ class WorkerSignals(QObject):
     fileResult = pyqtSignal(list, str)
     deleteResult = pyqtSignal(str)
     statusMessage = pyqtSignal(bool)
+    solutionResult = pyqtSignal(str)
 
 class AnalysisWorker(QRunnable):
     def __init__(self, checker, fileManager, path):
@@ -28,17 +29,41 @@ class AnalysisWorker(QRunnable):
         try:
             issueCount, data, code, lib = self.checker.analyzeFile(self.path)
             print("")
-            self.signals.statusMessage.emit(True)
+            #self.signals.statusMessage.emit(True)
             #self.checker.llmSolveSingle("mask_filt", "Example issue message for mask filter issue.", "Example source code snippet related to mask filter issue.")
-            solutions, aiEnabled = self.checker.llmSolve(data, code)
-            self.signals.statusMessage.emit(False)
+            #solutions, aiEnabled = self.checker.llmSolve(data, code)
+            #self.signals.statusMessage.emit(False)
+            aiStream = self.checker.grabIssues(data)
             fileName = self.path.split('/')[-1][:-4]
             lastModified = self.fileManager.get_last_modified_date(self.path)  
-            fileData = {"library":lib, "dataStream":{"data":data, "AI_Enabled":aiEnabled,"solutions": solutions}, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
+            fileData = {"library":lib, "dataStream":{"data":data,"AI_solutions": aiStream}, "sourceCode":code, "path":self.path, "lastEdited": lastModified}
             if(self.fileManager.save_file(fileName + '_ino.json', fileData)):
                self.signals.analysisResult.emit(issueCount)
         except Exception as e:
             print(f"Error in worker: {e}")
+
+class AISolutionWorker(QRunnable):
+    def __init__(self, checker, fileManager, issueType, issueMessage, code, name):
+        super().__init__()
+        self.checker = checker
+        self.fileManager = fileManager
+        self.issueType = issueType
+        self.issueMessage = issueMessage
+        self.code = code
+        self.fileName = name
+        self.signals = WorkerSignals()
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            json_obj = self.fileManager.getFileData(self.fileName)
+            solution = self.checker.llmSolveSingle(self.issueType, self.issueMessage, self.code)
+            json_obj["dataStream"]["AI_solutions"][self.issueType]["cached"] = True
+            json_obj["dataStream"]["AI_solutions"][self.issueType]["solution"] = solution
+            if(self.fileManager.save_file(self.fileName[:-4] + '_ino.json', json_obj)):
+                self.signals.solutionResult.emit(solution)
+        except Exception as e:
+            print(f"Error in AI Solution worker: {e}")
 
 class LoaderWorker(QRunnable):
     def __init__(self, fileManager, fileName):
@@ -94,6 +119,7 @@ class AnalysisInterface(QObject):
     populateSavedFiles = pyqtSignal(str)
     configFileLoaded = pyqtSignal(int, int, int, str)
     fileDeleted = pyqtSignal(str)
+    solutionGenerated = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -135,7 +161,12 @@ class AnalysisInterface(QObject):
         worker.signals.statusMessage.connect(self.statusMessage.emit)
         worker.signals.analysisResult.connect(self.fileProcessed.emit)
         self.threadPool.start(worker)
-        
+
+    def analyzeFileWithAI(self, type, message, code, name):  
+        worker = AISolutionWorker(self.checker, self.fileManager, type, message, code, name)
+        worker.signals.solutionResult.connect(self.solutionGenerated.emit)
+        self.threadPool.start(worker)
+
     def loadFile(self, name):
         worker = LoaderWorker(self.fileManager, name)
         worker.signals.fileResult.connect(self.fileLoaded.emit)
@@ -181,6 +212,7 @@ root_object.configUpdated.connect(interface.updateConfiguration)
 root_object.deleteFile.connect(interface.deleteFile)
 root_object.deleteAllFiles.connect(interface.deleteAllFiles)
 root_object.storeAPIKey.connect(interface.saveAPIKey)
+root_object.generateSolution.connect(interface.analyzeFileWithAI)
  
 splash.close()
 sys.exit(app.exec())

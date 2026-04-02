@@ -69,6 +69,16 @@ class FileHandler: ### NEED TO ADD FUNCTION TO POPULATE LIST WITH SAVED FILES ##
         except Exception as e:
             print(f"Error loading previous scans: {e}")
             return []
+        
+    def getFileData(self, name):
+        file_path = self.save_dir / (name[:-4] + '_ino.json')
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as file:
+                json_obj = json.load(file)
+                return json_obj
+        else:
+            print(f"File {file_path} does not exist.")
+            return None
 
     def check_file_exists(self, name): # will add another condition to check if it was modified after last scan
         file_path = self.save_dir / (name[:-4] + '_ino.json')

@@ -25,6 +25,7 @@ ApplicationWindow {
     //temp, find better solution later
     property var details
     property var sourceCode 
+    property bool aiEnabled: false
 
     signal scanFile(string path)
     signal checkFileExists(string name)
@@ -33,6 +34,7 @@ ApplicationWindow {
     signal deleteFile(string path)
     signal deleteAllFiles()
     signal storeAPIKey(string keyName, string key)
+    signal generateSolution(string issueType, string issueMessage, string code, string path)
     
     title: "StatiCAN"
     flags: Qt.Window | Qt.FramelessWindowHint
@@ -48,6 +50,10 @@ ApplicationWindow {
 
     Connections {
         target: ISSUE_CHECKER
+
+        function onSolutionGenerated(solutionText) {
+            fileInfoWindow.scanCompleted(solutionText)
+        }
 
         function onFileExists(status, mode) {
             if(status === true) {
@@ -93,6 +99,12 @@ ApplicationWindow {
 
         function onConfigFileLoaded(theme, contrast, agent, key) {
             settingsPage.init(theme, contrast, agent, key)
+            if(agent === 0) {
+                aiEnabled = false
+            }
+            else {
+                aiEnabled = true
+            }
         }
 
         function onFileDeleted(name) {
@@ -895,5 +907,9 @@ ApplicationWindow {
         messageRect.msgIcon = icon
         messageRect.msgContent = textContent
         messageSlideIn.start()
+    }
+
+    function generateAISolution(issueType, issueMessage, name) {
+        generateSolution(issueType, issueMessage, sourceCode, name)
     }
 }

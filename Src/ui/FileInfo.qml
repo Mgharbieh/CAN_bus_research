@@ -5,10 +5,16 @@ import QtQuick.Layouts 6.10
 
 ApplicationWindow {
     property int maxLength: 0
+    property int totalIssuesFound: 0
+    property bool solveInProgress: false
+
+    property var infoStream: null
+    property var aiStream: null
+    property var selectedIssue: null
 
     id: windowRoot
     width: screen.width * 0.8  
-    height: screen. height * 0.8 
+    height: screen.height * 0.8 
     visible: false
 
     title: ""
@@ -395,220 +401,443 @@ ApplicationWindow {
             color: backgroundcolor2
             radius: 15
 
-            ScrollView {
-                id: viewSuggestions
-                anchors.fill: parent
-                anchors.margins: 6
-                clip: true 
+            Rectangle {
+                id: suggestionTextRect
+                width: suggestionTextBox.contentWidth + 10
+                height: suggestionTextBox.contentHeight + 10
+                color: "transparent"
+                visible: false
 
-                contentWidth: suggestionTextRect.width
-                contentHeight: suggestionTextRect.height
-
-                ScrollBar.vertical: ScrollBar {
-                    id: vBar3
-                    parent: viewSuggestions
-                    x: viewSuggestions.mirrored ? 0 : viewSuggestions.width - width
-                    y: viewSuggestions.topPadding
-                    height: viewSuggestions.availableHeight 
-                    policy: ScrollBar.AsNeeded
-                    interactive: true
-                    padding: 0
-
-                    visible: vBar3.size < 1.0
-
-                    contentItem: Rectangle {
-                        implicitWidth: 6
-                        radius: width / 2
-                        color: colorWay.itemColor
-                        border.color: colorWay.accent1color
-                        border.width: {
-                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
-                            else {0}
-                        }
-                        visible: vBar3.visible
+                Text {
+                    id: suggestionTextBox
+                    anchors {
+                        top: parent.top
+                        left: parent.left
+                        margins: 5
                     }
-                    background: Rectangle {
-                        implicitWidth: 10
-                        color: backgroundcolor2
-                        visible: vBar3.visible
-                    }
+                    text: ""
+                    font.pixelSize: 25
+                    color: colorWay.textColor
                 }
+            }
 
-                ScrollBar.horizontal: ScrollBar {
-                    id: hBar3
-                    parent: viewSuggestions
-                    x: viewSuggestions.leftPadding
-                    y: viewSuggestions.height - height
-                    width: viewSuggestions.availableWidth
-                    policy: ScrollBar.AsNeeded
-                    hoverEnabled: false
-                    active: hovered || pressed
-
-                    visible: hBar3.size < 1.0
-
-                    contentItem: Rectangle {
-                        implicitHeight: 6
-                        radius: height / 2
-                        color: colorWay.itemColor
-                        border.color: colorWay.accent1color
-                        border.width: {
-                            if(colorWay.colorMode === colorWay.lightModeHC || colorWay.colorMode === colorWay.darkModeHC) {1}
-                            else {0}
-                        }
-                        visible: hBar3.visible
-                    } 
-                    background: Rectangle {
-                        implicitHeight: 10
-                        color: colorWay.backgroundcolor2
-                        opacity: 1
-                        visible: hBar3.visible
-                    }
+            Rectangle {
+                id: issueSelectionRect
+                anchors {
+                    fill: parent
                 }
+                color: "transparent"
+                visible: ((root.aiEnabled === true) && (totalIssuesFound > 0)) ? true : false
 
                 Rectangle {
-                    id: suggestionTextRect
-                    width: suggestionTextBox.contentWidth + 10
-                    height: suggestionTextBox.contentHeight + 10
+                    id: issueFixSolutions
+
+                    x: 0
+                    height: parent.height
+                    width: parent.width * 0.20
                     color: "transparent"
-                    visible: false
 
                     Text {
-                        id: suggestionTextBox
+                        id: issuesFoundText
                         anchors {
                             top: parent.top
                             left: parent.left
-                            margins: 5
+                            margins: 8
                         }
-                        text: ""
-                        font.pixelSize: 25
+                        text: "Issues: " + totalIssuesFound
+                        font.pixelSize: 30
+                        font.bold: true
                         color: colorWay.textColor
                     }
-                }
-
-                Rectangle {
-                    id: noAiRect
-                    width: (aiIconImg.width) 
-                    height: 80
-                    color: "transparent"
-                    visible: false
-                    x: (suggestionRect.width - width) / 2
-                    y: (suggestionRect.height - height) / 2
 
                     Rectangle {
-                        id: aiIconImg
-                        width: 100 + Math.max(aiTopText.contentWidth, aiBottomText.contentWidth)
-                        height: 100
+                        anchors {
+                            top: issuesFoundText.bottom
+                            left: parent.left
+                            right: parent.right
+                            bottom: parent.bottom
+                            margins: 5
+                        }
                         color: "transparent"
 
-                        Image {
-                            id: aiImg
-                            anchors {
-                                top: parent.top
-                                left: parent.left
+                        ListView {
+                            id: issueListView
+                            model: issueModel
+                            boundsBehavior: Flickable.StopAtBounds
+                            spacing: 3
+                            anchors.centerIn: parent
+                            height: contentHeight + 4
+                            width: parent.width
+                            clip: true
+
+                            delegate: Item {
+                                width: parent.width; height: 45
+
+                                Rectangle {
+                                    id: issueDelegateRect
+                                    anchors.centerIn: parent
+                                    width: parent.width - 10 //issueNameText.contentWidth + 14
+                                    height: parent.height
+                                    color: "transparent"
+                                    border.color: delegateMouseArea.containsMouse ? colorWay.accent1color : colorWay.separatorColor
+                                    border.width: 1 
+                                    radius: 5
+
+                                    Text {
+                                        id: issueNameText
+                                        anchors {
+                                            verticalCenter: parent.verticalCenter
+                                            left: parent.left
+                                            right:parent.right
+                                            leftMargin: 10
+                                            rightMargin: 10
+                                        }
+                                        text: issue_name
+                                        fontSizeMode: Text.Fit
+                                        minimumPixelSize: 12
+                                        font.pixelSize: 25
+                                        color: colorWay.textColor
+                                        elide: Text.ElideRight
+                                        horizontalAlignment: Text.AlignHCenter
+                                    }
+
+                                    MouseArea {
+                                        id: delegateMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true  
+                                        cursorShape: (solveInProgress === true) ? Qt.ForbiddenCursor : Qt.PointingHandCursor 
+                                        onClicked: {
+                                            if(solveInProgress == false) {
+                                                selectedIssue = issueModel.get(index)
+                                                showAISolution(selectedIssue)
+                                            }
+                                        }
+                                    }
+                                }  
                             }
-                            width: 100
-                            height: 100
-                            source: colorWay.noAiIconSrc
-                            mipmap: true
-                        }
-
-                        Text {
-                            id: aiTopText
-                            anchors {
-                                top: aiImg.top
-                                left: aiImg.right
-                                topMargin: 10
-                            }
-
-                            text: "AI suggestions are turned off!"
-                            font.pixelSize: 30
-                            color: colorWay.textColor
-                        }
-
-                        Text {
-                            id: aiBottomText
-                            anchors {
-                                bottom: aiImg.bottom
-                                left: aiImg.right
-                                bottomMargin: 15
-                            }
-
-                            text: "Enable suggestions: 'Settings>LLM Model'"
-                            font.pixelSize: 25
-                            color: colorWay.secondaryTextColor
                         }
                     }
                 }
 
                 Rectangle {
-                    id: noIssueRect
-                    width: (noIssueIconImg.width) 
-                    height: 80
-                    color: "transparent"
-                    visible: false
-                    x: (suggestionRect.width - width) / 2
-                    y: (suggestionRect.height - height) / 2
+                    id: menuArrowRect
+                    width: 20
+                    height:parent.height
+                    anchors {
+                        top: parent.top
+                        left: issueFixSolutions.right
+                    }
+                    color: hideMenuArea.containsMouse ? colorWay.focusColor : "transparent"
+                    radius: 10
 
                     Rectangle {
-                        id: noIssueIconImg
-                        width: 100 + Math.max(noIssueTopText.contentWidth, noIssueBottomText.contentWidth)
-                        height: 100
-                        color: "transparent"
-
-                        Image {
-                            id: noIssueImg
-                            anchors {
-                                top: parent.top
-                                left: parent.left
-                            }
-                            width: 100
-                            height: 100
-                            mipmap: true
-                            source: colorWay.noIssueSrc
+                        id: leftBar
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            bottom: parent.bottom
+                            topMargin: 10
+                            bottomMargin: 10
                         }
+                        width: 2
+                        radius: 1
+                        color: colorWay.separatorColor
+                    }
 
-                        Text {
-                            id: noIssueTopText
-                            anchors {
-                                top: noIssueImg.top
-                                left: noIssueImg.right
-                                topMargin: 10
+                    MouseArea {
+                        id: hideMenuArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if(arrowText.text == "˃") {
+                                console.log("showing menu...")
+                                showAIMenu.running = true
                             }
-
-                            text: "No Issues detected!"
-                            font.pixelSize: 30
-                            color: colorWay.textColor
-                        }
-
-                        Text {
-                            id: noIssueBottomText
-                            anchors {
-                                bottom: noIssueImg.bottom
-                                left: noIssueImg.right
-                                bottomMargin: 15
+                            else if(arrowText.text == "˂") { 
+                                console.log("hiding menu...")
+                                hideAIMenu.running = true
+                                
                             }
-
-                            text: "Yippiee!"
-                            font.pixelSize: 25
-                            color: colorWay.secondaryTextColor
                         }
                     }
+
+                    Text {
+                        id: arrowText
+                        anchors.centerIn: parent
+                        font.pixelSize: 25
+                        font.bold: true
+                        text: issueFixSolutions.x < 0 ? "˃" : "˂" 
+                        color: colorWay.accent1color
+                    }
+
+                    Rectangle {
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                            bottom: parent.bottom
+                            topMargin: 10
+                            bottomMargin: 10
+                        }
+                        width: 2
+                        radius: 1
+                        color: colorWay.separatorColor
+                    }
                 }
+
+                Rectangle {
+                    id: issueSolutionRect
+                    anchors {
+                        top: parent.top
+                        left: menuArrowRect.right
+                        right:parent.right
+                        bottom: parent.bottom
+                    }
+                    color: "transparent"
+
+                    Text {
+                        id: issuePlaceholderText
+                        anchors.centerIn: parent
+                        text: "Select an issue to view potential solutions"
+                        font.pixelSize: 30
+                        color: textColor
+                        visible: true
+                    }
+
+                    Text {
+                        id: issueSolutionText
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            right: parent.right
+                            bottom: parent.bottom
+                            margins: 6
+                        }
+
+                        text: ""
+                        fontSizeMode: Text.Fit
+                        minimumPixelSize: 12
+                        font.pixelSize: 30
+                        wrapMode: Text.WordWrap
+                        visible: false
+                        color: colorWay.textColor
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignLeft
+                    }
+
+                    Rectangle {
+                        id: loadingIssueRect
+                        anchors.centerIn: parent
+                        width: 80 + generatingText.contentWidth
+                        height: 80
+
+                        color: "transparent"
+                        visible: solveInProgress
+                        
+                        Rectangle {
+                            id: solvingIndicatorRect
+                            width: 80
+                            height: 80
+                            color: "transparent"
+
+                            LoadingIndicator {
+                                id: solvingIssueIndicator
+                                anchors.fill: parent
+                                isRunning: solveInProgress
+                                visible: solveInProgress
+                            }
+                        }
+
+                        Rectangle {
+                            id: solvingStatusRect
+                            anchors {
+                                top: solvingIndicatorRect.top
+                                bottom: solvingIndicatorRect.bottom
+                                left: solvingIndicatorRect.right
+                                leftMargin: 5
+                            }
+                            color: "transparent"
+
+                            Text {
+                                id: generatingText
+                                anchors {
+                                    top: parent.top
+                                    left: parent.left
+                                } 
+                                text: "Generating solution..."
+                                font.pixelSize: 30
+                                color: colorWay.textColor
+                                visible: solveInProgress
+                            }
+
+                            Text {
+                                id: issueToSolveText
+                                anchors {
+                                    bottom: parent.bottom
+                                    left: parent.left
+                                    leftMargin: 5
+                                } 
+                                text: selectedIssue.issue_name
+                                font.pixelSize: 25
+                                color: colorWay.secondaryTextColor
+                                visible: solveInProgress
+                            }
+                        }
+                    }
+                } 
             }   
+
+            Rectangle {
+                id: noAiRect
+                width: (aiIconImg.width) 
+                height: 80
+                color: "transparent"
+                visible: ((root.aiEnabled === false) && (totalIssuesFound > 0)) ? true : false
+                x: (suggestionRect.width - width) / 2
+                y: (suggestionRect.height - height) / 2
+
+                Rectangle {
+                    id: aiIconImg
+                    width: 100 + Math.max(aiTopText.contentWidth, aiBottomText.contentWidth)
+                    height: 100
+                    color: "transparent"
+
+                    Image {
+                        id: aiImg
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                        }
+                        width: 100
+                        height: 100
+                        source: colorWay.noAiIconSrc
+                        mipmap: true
+                    }
+
+                    Text {
+                        id: aiTopText
+                        anchors {
+                            top: aiImg.top
+                            left: aiImg.right
+                            topMargin: 10
+                        }
+
+                        text: "AI suggestions are turned off!"
+                        font.pixelSize: 30
+                        color: colorWay.textColor
+                    }
+
+                    Text {
+                        id: aiBottomText
+                        anchors {
+                            bottom: aiImg.bottom
+                            left: aiImg.right
+                            bottomMargin: 15
+                        }
+
+                        text: "Enable suggestions: 'Settings>LLM Model'"
+                        font.pixelSize: 25
+                        color: colorWay.secondaryTextColor
+                    }
+                }
+            }
+
+            Rectangle {
+                id: noIssueRect
+                width: (noIssueIconImg.width) 
+                height: 80
+                color: "transparent"
+                visible: totalIssuesFound === 0 ? true : false
+                x: (suggestionRect.width - width) / 2
+                y: (suggestionRect.height - height) / 2
+
+                Rectangle {
+                    id: noIssueIconImg
+                    width: 100 + Math.max(noIssueTopText.contentWidth, noIssueBottomText.contentWidth)
+                    height: 100
+                    color: "transparent"
+
+                    Image {
+                        id: noIssueImg
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                        }
+                        width: 100
+                        height: 100
+                        mipmap: true
+                        source: colorWay.noIssueSrc
+                    }
+
+                    Text {
+                        id: noIssueTopText
+                        anchors {
+                            top: noIssueImg.top
+                            left: noIssueImg.right
+                            topMargin: 10
+                        }
+
+                        text: "No Issues detected!"
+                        font.pixelSize: 30
+                        color: colorWay.textColor
+                    }
+
+                    Text {
+                        id: noIssueBottomText
+                        anchors {
+                            bottom: noIssueImg.bottom
+                            left: noIssueImg.right
+                            bottomMargin: 15
+                        }
+
+                        text: "Yippiee!"
+                        font.pixelSize: 25
+                        color: colorWay.secondaryTextColor
+                    }
+                }
+            }
         }
     }
     
+    ListModel {
+        id: issueModel
+    }
 
     TextMetrics {
         id: textMeasurer
         font.pixelSize: 28
     }
 
+    PropertyAnimation {
+        id: hideAIMenu
+        target: issueFixSolutions
+        property: "x"
+        to: -1 * issueFixSolutions.width
+        duration: 150
+        onFinished: {
+            issueFixSolutions.visible = false
+            leftBar.visible = false
+        }
+    }
+
+    PropertyAnimation {
+        id: showAIMenu
+        target:  issueFixSolutions
+        property: "x"
+        to: 0
+        duration: 150
+        onStarted: {
+            issueFixSolutions.visible = true
+            leftBar.visible = true
+        }
+    }
+
     function setFileInfo(code, dataStream) {
         console.log("setFileInfo called...")
         var temp = ""
 
-        var infoStream = dataStream.data
+        infoStream = dataStream.data
+        aiStream = dataStream.AI_solutions
         windowRoot.title = infoStream.file_name
         infoTitleBar.setTitleText(infoStream.file_name)
         for (var i = 0; i < code.length; i++) {
@@ -642,36 +871,98 @@ ApplicationWindow {
             temp += ("• " + item) + "\n"
         })   
         maskFiltPane.populateModule("Mask and Filter (" + infoStream.mask_filt.mf_issues + ")", temp)
+        if(infoStream.mask_filt.mf_issues !== 0) {
+            temp = ""
+            aiStream.mask_filt.solution.forEach(function(item){
+                temp += item
+            })
+            issueModel.append({
+                "issue_name": "Mask and Filter", 
+                "abbreviation": "mask_filt",
+                "previously_solved": aiStream.mask_filt.cached,
+                "issue_solution": temp
+            })
+        }
 
         temp = ""
         infoStream.rtr.rtr_messages.forEach(function(item) {
             temp += ("• " + item) + "\n"
         })
         rtrPane.populateModule("Remote Transmission Request (" + infoStream.rtr.rtr_issues + ")", temp)
+        if(infoStream.rtr.rtr_issues !== 0) {
+            temp = ""
+            aiStream.rtr.solution.forEach(function(item){
+                temp += item
+            })
+            issueModel.append({
+                "issue_name": "Remote Transmission Request",
+                "abbreviation": "rtr", 
+                "previously_solved": aiStream.rtr.cached,
+                "issue_solution": temp
+            })
+        }
 
         temp = ""
         infoStream.idLen.idLen_messages.forEach(function(item) {
             temp += ("• " + item) + "\n"
         })
         idLenPane.populateModule("ID Length (" + infoStream.idLen.idLen_issues + ")", temp)
+        if(infoStream.idLen.idLen_issues !== 0) {
+            temp = ""
+            aiStream.idLen.solution.forEach(function(item){
+                temp += item
+            })
+            issueModel.append({
+                "issue_name": "ID Bitlength", 
+                "abbreviation": "idLen",
+                "previously_solved": aiStream.idLen.cached,
+                "issue_solution": temp
+            })
+        }
 
         temp = ""
         infoStream.dlc.dlc_messages.forEach(function(item) {
             temp += ("• " + item) + "\n"
         })
         dlcPane.populateModule("Data Length Code (" + infoStream.dlc.dlc_issues + ")", temp)
+        if(infoStream.dlc.dlc_issues !== 0) {
+            temp = ""
+            aiStream.dlc.solution.forEach(function(item){
+                temp += item
+            })
+            issueModel.append({"
+                issue_name": "Data Length", 
+                "abbreviation": "dlc",
+                "previously_solved": aiStream.dlc.cached,
+                "issue_solution": temp
+            })
+        }
 
-       temp = ""
+        temp = ""
         infoStream.dataPack.dataPack_messages.forEach(function(item) {
            temp += ("• " + item) + "\n"
         })
         bytePackingPane.populateModule("Data Byte Packing (" + infoStream.dataPack.dataPack_issues + ")", temp)
-
+        if(infoStream.dataPack.dataPack_issues !== 0) {
+            temp = ""
+            aiStream.dataPack.solution.forEach(function(item){
+                temp += item
+            })
+            issueModel.append({
+                "issue_name": "Byte Packing", 
+                "abbreviation": "dataPack",
+                "previously_solved": aiStream.dataPack.cached,
+                "issue_solution": temp
+            })
+        }
+        totalIssuesFound = infoStream.totalIssues
+        
+        /*
         if(infoStream.totalIssues === 0) {
             noIssueRect.visible = true
         }
         else {
-            if(dataStream.AI_Enabled === false) {
+            if(root.aiEnabled === false) {
                 noAiRect.visible = true
             }
             else {
@@ -681,9 +972,42 @@ ApplicationWindow {
                 })
                 suggestionTextBox.text = solutionText
                 suggestionTextRect.visible = true
-                console.log("width:", suggestionTextRect.width, suggestionRect.width)
             }
         }
+        */
         windowRoot.visible = true
+    }
+
+    function showAISolution(issue) {
+        if(issue.previously_solved) {
+            solveInProgress = false
+            issueSolutionText.text = issue.issue_solution
+            issuePlaceholderText.visible = false
+            issueSolutionText.visible = true
+        }
+        else {
+            issuePlaceholderText.visible = false
+            solveInProgress = true
+            if(issue.abbreviation == "mask_filt") {
+                var errorMsgs = "mf_messages"
+            }
+            else {
+                var errorMsgs = issue.abbreviation + "_messages"
+            }
+
+            let type = infoStream[issue.abbreviation]
+            let msgs = type[errorMsgs]
+            var txt = ""
+            msgs.forEach(function(item) {
+                txt += (item+ "\n")
+            })
+            root.generateAISolution(issue.abbreviation, txt, infoStream.file_name)
+        }
+    }
+
+    function scanCompleted(solutionText) {
+        selectedIssue.previously_solved = true
+        selectedIssue.issue_solution = solutionText
+        showAISolution(selectedIssue)
     }
 }
