@@ -553,6 +553,7 @@ ApplicationWindow {
                             left: parent.left
                             right: parent.right
                             bottom: parent.bottom
+                            leftMargin: 10
                             margins: 6
                         }
 
@@ -907,7 +908,7 @@ ApplicationWindow {
     function showAISolution(type, issueText) {
         selectedIssue = aiStream[type]["solution"][issueText] 
         activeIssueText.text = issueText
-        if(selectedIssue.previously_solved) {
+        if(selectedIssue.cached) {
             solveInProgress = false
             issueSolutionText.text = selectedIssue.answer
             issuePlaceholderText.visible = false
