@@ -231,7 +231,7 @@ class IssueChecker():
             solutionArray.append(self.render_solution(item))
             print(self.render_solution(item))
         
-        return solutionArray
+        return solutionArray[0]
     
     def llmSolve(self, dataStream, sourceCode):
         
