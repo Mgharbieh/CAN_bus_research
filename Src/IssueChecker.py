@@ -1,6 +1,7 @@
 from typing import List
 import platform
 import json
+import openai
 from pydantic import BaseModel, Field
 import tree_sitter as TreeSitter
 
@@ -14,16 +15,18 @@ import Modules.IDBitLength.IDAnalyzer as id_analyzer
 import Modules.DataBytePacking.DataByte_Analyzer as data_byte_packing
 import Modules.DataLength.dlc_analyzer as dlc_analyzer
 
-from langchain_ollama import ChatOllama as ai
-#from langchain_anthropic import ChatAnthropic
+from langchain_ollama import ChatOllama
+from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
-#from langchain_deepseek import ChatDeepSeek
+from langchain_deepseek import ChatDeepSeek
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 from dotenv import load_dotenv
 import os
 
 load_dotenv(dotenv_path="/Users/abrahamabdulkarim/Documents/StatiCAN/.env")
-print("API KEY:", os.getenv("API_KEY"))
+# print("API KEY:", os.getenv("API_KEY"))
 
 class IssueSolution(BaseModel):
     issue_type: str = Field(description="Type of issue, e.g. Mask Filter")
@@ -49,7 +52,6 @@ Rules:
 - Each issue must produce exactly one solution object.
 - Keep the solution specific to the provided source code.
 - Reference exact code lines or exact code snippets when possible.
-- Do not include markdown fences.
 - Do not include any commentary before or after the output.
 - The issue messages may reference line numbers, but these are not guaranteed to be accurate. Always verify against the source code.
 - Flags like 'CAN_RTR_FLAG' or 'CAN_SFF_FLAG' (or similar depending on the library) may be utilized and sometimes you may need to infer the intent of a code snippet to understand the issue before assuming changes need to be made.
@@ -120,17 +122,9 @@ class IssueChecker():
             return
         elif(modelNum == 1):
             model = "llama3"
-        elif(modelNum == 2):
-            model = "deepseek-chat"
-        elif(modelNum == 3):
-            model = "gpt-4o"
-        elif(modelNum == 4):
-            model = "claude-3-7-sonnet-latest"
-        elif(modelNum == 5):
-            model = "gemini-2.0-pro"
 
-        self.llm = ai(
-                model= model,
+            self.llm = ChatOllama(
+                model= "llama3",
                 temperature = 0.7,
                 num_ctx = 8192,
                 num_predict = 600,
@@ -140,17 +134,50 @@ class IssueChecker():
                 repeat_last_n= 128,
                 seed = 42
                 ).with_structured_output(IssueSolutionList)
+            
+        elif(modelNum == 2):
+            model = "deepseek-chat"
 
-        # self.llm = ChatAnthropic(
-        #         model= model,
-        #         temperature = 0.7
-        # ).with_structured_output(IssueSolutionList)
+            self.llm = ChatDeepSeek(
+                model= "deepseek-chat",
+                temperature = 0.7,
+                api_key= os.getenv("API_KEY")
+                ).with_structured_output(IssueSolutionList)
+            
+        elif(modelNum == 3):
+            model = "gpt-4o"
 
-        # self.llm = ChatDeepSeek(
-        #         model= "deepseek-chat",
-        #         temperature = 0.7,
-        #         api_key= os.getenv("API_KEY")
-        # ).with_structured_output(IssueSolutionList)
+            self.llm = ChatOpenAI(
+                model= "gpt-4o",
+                temperature = 0.7,
+                api_key= os.getenv("API_KEY")
+                ).with_structured_output(IssueSolutionList)
+
+        elif(modelNum == 4):
+            model = "claude-3-7-sonnet-latest"
+
+            self.llm = ChatAnthropic(
+                model= "claude-3-7-sonnet-latest",
+                temperature = 0.7,
+                api_key= os.getenv("API_KEY")
+                ).with_structured_output(IssueSolutionList)
+            
+        elif(modelNum == 5):
+            model = "gemini-2.0-pro"
+
+            self.llm = ChatGoogleGenerativeAI(
+                model= "gemini-2.0-pro",
+                temperature = 0.7,
+                api_key= os.getenv("API_KEY")
+            ).with_structured_output(IssueSolutionList)
+
+        
+
+        
+
+        
+
+        
         
         prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
@@ -267,9 +294,9 @@ class IssueChecker():
         issuesFound += rtrIssuesFound
         dataStream["rtr"] = {"rtr_issues":rtrIssuesFound, "rtr_messages":rtrIssueMessages, "rtr_lineNums":rtrLineNums}
 
-        idLenIssuesFound, idLenIssueMessages = self.id_bit_length_analyzer.checkIDBitLength(RootCursor)
+        idLenIssuesFound, idLenIssueMessages, idLineNums = self.id_bit_length_analyzer.checkIDBitLength(RootCursor)
         issuesFound += idLenIssuesFound
-        dataStream["idLen"] = {"idLen_issues":idLenIssuesFound, "idLen_messages":idLenIssueMessages}
+        dataStream["idLen"] = {"idLen_issues":idLenIssuesFound, "idLen_messages":idLenIssueMessages, "idLen_lineNums": idLineNums}
 
         dataPackIssuesFound, dataPackIssueMessages = self.data_byte_packing_analyzer.checkDataPack(RootCursor)
         issuesFound += dataPackIssuesFound
