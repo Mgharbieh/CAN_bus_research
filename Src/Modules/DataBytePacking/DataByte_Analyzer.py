@@ -261,8 +261,18 @@ class DataBytePackingAnalyzer:
 
         #sendMsgBuf(..., dlc, buf) or write(id,type,dlc,buf)
         if len(args) >= 2:
+            dlc_node, buf_node, bytes_sent = None, None, None
+
             if "write" in fn_txt and len(args) >= 4:
                 dlc_node, buf_node = args[2], args[3]
+            elif "sendmsgbuf" in fn_txt and len(args) == 5:
+                rtr_node = args[2]
+                rtr_val = self._int(rtr_node)
+                if rtr_val is None:
+                    rtr_val = self._resolve_dlc_before(self._txt(rtr_node), call_node.start_byte)
+                if rtr_val:
+                    return None, 0
+                dlc_node, buf_node = args[3], args[4]
             else:
                 dlc_node, buf_node = args[-2], args[-1]
 
@@ -271,7 +281,6 @@ class DataBytePackingAnalyzer:
 
             dlc = self._int(dlc_node)
             if dlc is None:
-                #if dlc is a variable name, resolve its latest assignment before call
                 dlc = self._resolve_dlc_before(self._txt(dlc_node), call_node.start_byte)
 
             assumed = False
