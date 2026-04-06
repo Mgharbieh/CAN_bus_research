@@ -1,5 +1,6 @@
 import sys
 import ctypes
+import platform
 import IssueChecker 
 import fileHandler
 
@@ -189,8 +190,9 @@ splash.setColor(Qt.GlobalColor.transparent)
 splash.show()
 app.processEvents()
 
-#myappid = 'statican.gui.v1' 
-#ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+if(platform.system() == 'Windows'):
+    myappid = 'statican.gui.v1' 
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 app.setWindowIcon(QIcon("./Src/ui/assets/statican.ico"))
 interface = AnalysisInterface()
 

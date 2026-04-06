@@ -452,6 +452,7 @@ ApplicationWindow {
                         anchors.fill: parent
                         anchors.margins: 10
                         text: "No Issue Selected"
+                        color: colorWay.textColor
                         fontSizeMode: Text.Fit
                         minimumPixelSize: 12
                         font.pixelSize: 30
