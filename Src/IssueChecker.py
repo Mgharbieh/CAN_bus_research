@@ -174,10 +174,13 @@ class IssueChecker():
             current = dataStream[type]
             for out in current:
                 if out.endswith("_issues") and current[out] > 0:
-                    AI_solutions[type] = {"hasIssues":True, "cached":False, "solution":[]}
+                    solution = {}
+                    for text in dataStream[type][out[:-6] + "messages"]:
+                        solution[text] = {"cached": False, "answer": ""}
+                    AI_solutions[type] = {"hasIssues":True, "solution":solution}
                     continue
                 elif out.endswith("_issues") and current[out] == 0: 
-                    AI_solutions[type] = {"hasIssues":False, "cached":False, "solution":[]}
+                    AI_solutions[type] = {"hasIssues":False, "solution":{}}
                     continue
         return AI_solutions
 
