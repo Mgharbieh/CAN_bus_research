@@ -88,10 +88,10 @@ class IssueChecker():
         self.llm = None
         self.chain = None
 
-    outputStructure =   "Issue Type: (insert type here) \n"\
-                        "Issue Number: (insert bug number here) \n"\
-                        "Issue Messages: (insert issue message here) \n"\
-                        "Solution: (insert solution here) \n"\
+    # outputStructure =   "Issue Type: (insert type here) \n"\
+    #                     "Issue Number: (insert bug number here) \n"\
+    #                     "Issue Messages: (insert issue message here) \n"\
+    outputStructure =    "(insert solution here)"
           
     
 
@@ -189,10 +189,10 @@ class IssueChecker():
 
     def render_solution(self, item: IssueSolution) -> str:
         return (
-            f"Issue Type: {item.issue_type}\n"
-            f"Issue Number: {item.issue_number}\n"
-            f"Issue Messages: {item.issue_message}\n"
-            f"Solution: {item.solution}\n"
+            # f"Issue Type: {item.issue_type}\n"
+            # f"Issue Number: {item.issue_number}\n"
+            # f"Issue Messages: {item.issue_message}\n"
+            f"{item.solution}\n"
         )
     
     def grabIssues(self, dataStream):

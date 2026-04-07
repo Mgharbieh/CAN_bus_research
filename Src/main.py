@@ -59,8 +59,8 @@ class AISolutionWorker(QRunnable):
         try:
             json_obj = self.fileManager.getFileData(self.fileName)
             solution = self.checker.llmSolveSingle(self.issueType, self.issueMessage, self.code)
-            json_obj["dataStream"]["AI_solutions"][self.issueType][self.issueMessage]["cached"] = True
-            json_obj["dataStream"]["AI_solutions"][self.issueType]["answer"] = solution
+            json_obj["dataStream"]["AI_solutions"][self.issueType]["solution"][self.issueMessage]["cached"] = True
+            json_obj["dataStream"]["AI_solutions"][self.issueType]["solution"][self.issueMessage]["answer"] = solution
             if(self.fileManager.save_file(self.fileName[:-4] + '_ino.json', json_obj)):
                 self.signals.solutionResult.emit(solution)
         except Exception as e:

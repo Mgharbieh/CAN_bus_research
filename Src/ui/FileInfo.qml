@@ -11,6 +11,7 @@ ApplicationWindow {
     property var infoStream: null
     property var aiStream: null
     property var selectedIssue: null
+    property string selectedIssueType: ""
 
     id: windowRoot
     width: screen.width * 0.8  
@@ -909,6 +910,7 @@ ApplicationWindow {
     function showAISolution(type, issueText) {
         selectedIssue = aiStream[type]["solution"][issueText] 
         activeIssueText.text = issueText
+        selectedIssueType = type
         if(selectedIssue.cached) {
             solveInProgress = false
             issueSolutionText.text = selectedIssue.answer
@@ -917,6 +919,7 @@ ApplicationWindow {
         }
         else {
             issuePlaceholderText.visible = false
+            issueSolutionText.visible = false
             solveInProgress = true
             if(type == "mask_filt") {
                 var errorMsgs = "mf_messages"
@@ -929,8 +932,11 @@ ApplicationWindow {
     }
 
     function scanCompleted(solutionText) {
-        selectedIssue.previously_solved = true
-        selectedIssue.issue_solution = solutionText
-        showAISolution(selectedIssue)
+        selectedIssue.cached = true
+        selectedIssue.answer = solutionText
+        solveInProgress = false
+        issueSolutionText.text = selectedIssue.answer
+        issuePlaceholderText.visible = false
+        issueSolutionText.visible = true
     }
 }
