@@ -306,9 +306,9 @@ class IssueChecker():
             "dataPack_lineNums": dataPackLineNums
         }
 
-        dlcIssuesFound, dlcIssueMessages = self.data_length_analyzer.checkDLC(RootCursor)
+        dlcIssuesFound, dlcIssueMessages, dlcLineNums = self.data_length_analyzer.checkDLC(RootCursor)
         issuesFound += dlcIssuesFound
-        dataStream["dlc"] = {"dlc_issues":dlcIssuesFound, "dlc_messages":dlcIssueMessages}
+        dataStream["dlc"] = {"dlc_issues":dlcIssuesFound, "dlc_messages":dlcIssueMessages, "dlc_lineNums": dlcLineNums}
 
         dataStream["totalIssues"] = issuesFound
         
