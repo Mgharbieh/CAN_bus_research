@@ -2,11 +2,14 @@ import QtQuick 6.10
 import QtQuick.Controls 6.10
 
 Item {
+    id: itemRoot
     visible: true
-    implicitHeight: issueTextArea.contentHeight + 20
-    implicitWidth: issueTextArea.contentWidth + 50
+    implicitHeight: issueTextRect.height + 40
+    implicitWidth: issueTextRect.width + 50
 
     property var scrollRef: null
+    property var aiWorking: null
+    signal issueSelected(string txt)
 
     Rectangle {
         id: issueTitleBar
@@ -36,6 +39,105 @@ Item {
         }
     }
 
+    Rectangle {
+        id: issueTextRect
+        anchors {
+            top: issueTitleBar.bottom
+            left: parent.left
+            leftMargin: 10
+        }
+        
+        height: issuePaneList.contentHeight + 10
+        width: issuePaneList.contentItem.childrenRect.width + 10
+        color: "transparent"
+
+        ListView {
+            id: issuePaneList
+            anchors {
+                top: parent.top
+                left: parent.left
+                bottom: parent.bottom
+                topMargin: 2
+            }
+            model: issuePaneModel
+            clip: false
+            interactive: false
+            width: itemRoot.width
+            spacing: 2
+
+            delegate: Rectangle {
+                property alias delegateWidth: delegateRect.width
+
+                id: delegateRect
+                width: issuePaneText.contentWidth + 5
+                height: 30
+                color: "transparent"
+                //issueMouseArea.containsMouse ? colorWay.accent1color : "transparent"
+                border.color: {
+                    if ((issueMouseArea.containsMouse) && 
+                        (issue_string.includes("No issues") || 
+                        issue_string.includes("no issues") || 
+                        issue_string.includes("no errors"))) {
+                            return "transparent"
+                        }
+                        else if (issueMouseArea.containsMouse) {
+                            return colorWay.accent1color
+                        }
+                        else {
+                            return "transparent"
+                        }
+                }
+                border.width: 1
+                radius: 5
+
+                Text {
+                    id:issuePaneText
+                    anchors {
+                        top: parent.top
+                        left: parent.left
+                        bottom: parent.bottom
+                    }
+                    text: issue_string
+                    color: colorWay.textColor
+                    font.pixelSize: 25
+                    wrapMode: Text.NoWrap
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                MouseArea {
+                    id: issueMouseArea
+                    anchors.fill: delegateRect
+                    hoverEnabled: true
+                    cursorShape: {
+                        if(issue_string.includes("No issues") || 
+                        issue_string.includes("no issues") || 
+                        issue_string.includes("no errors")) {
+                            return Qt.ArrowCursor
+                        }
+                        else {
+                            if(aiWorking) {
+                                return Qt.ForbiddenCursor
+                            }
+                            else {
+                                return Qt.PointingHandCursor
+                            }  
+                        }
+                    }
+                    onClicked: {
+                        if(aiWorking == false) {
+                            issueSelected(issue_string.substring(2))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    ListModel {
+        id: issuePaneModel
+    }
+
+    /*
     TextArea {
         id: issueTextArea
         anchors {
@@ -55,9 +157,13 @@ Item {
             radius: 15
         }
     }
+    */
 
-    function populateModule(titleString, issueString) {
+    function populateModule(titleString, issueList) {
         issueTitleText.text = titleString
-        issueTextArea.text = issueString
+        //issueTextArea.text = issueString
+        issueList.forEach(function(item) {
+            issuePaneModel.append({"issue_string": "• " + item})
+        })
     }
 }

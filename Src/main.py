@@ -1,5 +1,6 @@
 import sys
 import ctypes
+import platform
 import IssueChecker 
 import fileHandler
 
@@ -58,8 +59,8 @@ class AISolutionWorker(QRunnable):
         try:
             json_obj = self.fileManager.getFileData(self.fileName)
             solution = self.checker.llmSolveSingle(self.issueType, self.issueMessage, self.code)
-            json_obj["dataStream"]["AI_solutions"][self.issueType]["cached"] = True
-            json_obj["dataStream"]["AI_solutions"][self.issueType]["solution"] = solution
+            json_obj["dataStream"]["AI_solutions"][self.issueType][self.issueMessage]["cached"] = True
+            json_obj["dataStream"]["AI_solutions"][self.issueType]["answer"] = solution
             if(self.fileManager.save_file(self.fileName[:-4] + '_ino.json', json_obj)):
                 self.signals.solutionResult.emit(solution)
         except Exception as e:
@@ -189,8 +190,9 @@ splash.setColor(Qt.GlobalColor.transparent)
 splash.show()
 app.processEvents()
 
-#myappid = 'statican.gui.v1' 
-#ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+if(platform.system() == 'Windows'):
+    myappid = 'statican.gui.v1' 
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 app.setWindowIcon(QIcon("./Src/ui/assets/statican.ico"))
 interface = AnalysisInterface()
 

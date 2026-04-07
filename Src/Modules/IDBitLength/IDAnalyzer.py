@@ -8,10 +8,12 @@ class IDBitLength():
     def __init__(self):
         self.mode = ""
         self.frameIDList = []
+        self.lineNums = []
 
     def _reset(self):
         self.mode = ""
         self.frameIDList = []
+        self.lineNums = []
 
     #############################################################################
     def _modeSearch(self, root):  
@@ -116,10 +118,12 @@ class IDBitLength():
                                         for x in node.children:
                                             if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
                                                 pair.append("extended") #frameIDList
+                                                pair.append(id.start_point.row + 1)
                                                 self.frameIDList.append(pair)
                                                 pair = []
                                             elif(x.type == "identifier" and x.text.decode() == "CAN_SFF_FLAG"):
                                                 pair.append("standard")
+                                                pair.append(id.start_point.row + 1)
                                                 self.frameIDList.append(pair)
                                                 pair = []
                                     elif(int(field.text.decode(),16) <= 0x7FF):
@@ -128,10 +132,12 @@ class IDBitLength():
                                         for x in node.children:
                                             if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
                                                 pair.append("extended") #frameIDList
+                                                pair.append(id.start_point.row + 1)
                                                 self.frameIDList.append(pair)
                                                 pair = []
                                             elif(x.type == "identifier" and (x.text.decode() == "CAN_SFF_FLAG" or x.text.decode() == "CAN_RTR_FLAG")):
                                                 pair.append("standard")
+                                                pair.append(id.start_point.row + 1)
                                                 self.frameIDList.append(pair)
                                                 pair = []
 
@@ -152,10 +158,12 @@ class IDBitLength():
                                                     for x in node.children:
                                                         if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
                                                             pair.append("extended") #frameIDList
+                                                            pair.append(id.start_point.row + 1)
                                                             self.frameIDList.append(pair)
                                                             pair = []
                                                         elif(x.type == "identifier" and (x.text.decode() == "CAN_SFF_FLAG" or x.text.decode() == "CAN_RTR_FLAG")):
                                                             pair.append("standard")
+                                                            pair.append(id.start_point.row + 1)
                                                             self.frameIDList.append(pair)
                                                             pair = []
 
@@ -169,10 +177,12 @@ class IDBitLength():
                                                     for x in node.children:
                                                         if(x.type == "identifier" and x.text.decode() == "CAN_EFF_FLAG"):
                                                             pair.append("extended") #frameIDList
+                                                            pair.append(id.start_point.row + 1)
                                                             self.frameIDList.append(pair)
                                                             pair = []
                                                         elif(x.type == "identifier" and (x.text.decode() == "CAN_SFF_FLAG" or x.text.decode() == "CAN_RTR_FLAG")):
                                                             pair.append("standard")
+                                                            pair.append(id.start_point.row + 1)
                                                             self.frameIDList.append(pair)
                                                             pair = []
                                                 # self.frameIDList.append(pair)
@@ -188,6 +198,7 @@ class IDBitLength():
                                 self.mode = "standard"
                                 pair.append("standard")
                                 pair.append("standard")
+                            pair.append(id.start_point.row + 1)
                             self.frameIDList.append(pair)
                             #print(self.frameIDList)
                             pair = []
@@ -204,6 +215,7 @@ class IDBitLength():
                                         self.mode = "standard"
                                         pair.append("standard")
                                         pair.append("standard")
+                                    pair.append(id.start_point.row + 1)
                                     self.frameIDList.append(pair)
                                     print(self.frameIDList)
                                     pair = []
@@ -530,6 +542,7 @@ class IDBitLength():
             elif(frame[1]!=frame[2]):
                 print("A(n) " + frame[1] + " ID Bit Length is set during frame initialization for '" + frame[0] + "' but uses a(n) " + frame[2] + " flag when sending message.")
                 resultList.append("A(n) " + frame[1] + " ID Bit Length is set during frame initialization for '" + frame[0] + "' but uses a(n) " + frame[2] + " flag when sending message.")
+                self.lineNums.append(frame[3])
                 issues += 1
 
         return issues, resultList
@@ -591,4 +604,4 @@ class IDBitLength():
         # RootCursor = tree.root_node
         self._reset()
         issueCount, results = self._idBitLengthCheck(root)
-        return issueCount, results
+        return issueCount, results, self.lineNums

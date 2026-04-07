@@ -374,6 +374,7 @@ ApplicationWindow {
                                         id: deleteMouseArea
                                         anchors.fill: parent
                                         hoverEnabled: true
+                                        enabled: focused
 
                                         onEntered: cursorShape = Qt.PointingHandCursor
                                         onExited: cursorShape = Qt.ArrowCursor

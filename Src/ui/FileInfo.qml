@@ -343,30 +343,40 @@ ApplicationWindow {
                         id: maskFiltPane
                         Layout.fillWidth: true
                         scrollRef: viewIssues
+                        aiWorking: solveInProgress
+                        onIssueSelected: (textStr) => showAISolution("mask_filt", textStr)
                     }
 
                     IssuePane {
                         id: rtrPane
                         Layout.fillWidth: true
                         scrollRef: viewIssues
+                        aiWorking: solveInProgress
+                        onIssueSelected: (textStr) => showAISolution("rtr", textStr)
                     }
 
                     IssuePane {
                         id: idLenPane
                         Layout.fillWidth: true
                         scrollRef: viewIssues
+                        aiWorking: solveInProgress
+                        onIssueSelected: (textStr) => showAISolution("idLen", textStr)
                     }
 
                     IssuePane {
                         id: dlcPane
                         Layout.fillWidth: true
                         scrollRef: viewIssues
+                        aiWorking: solveInProgress
+                        onIssueSelected: (textStr) => showAISolution("dlc", textStr)
                     }
 
                     IssuePane {
                         id: bytePackingPane
                         Layout.fillWidth: true
                         scrollRef: viewIssues
+                        aiWorking: solveInProgress
+                        onIssueSelected: (textStr) => showAISolution("dataPack", textStr)
                     }
                 }
             }
@@ -438,84 +448,17 @@ ApplicationWindow {
                     color: "transparent"
 
                     Text {
-                        id: issuesFoundText
-                        anchors {
-                            top: parent.top
-                            left: parent.left
-                            margins: 8
-                        }
-                        text: "Issues: " + totalIssuesFound
-                        font.pixelSize: 30
-                        font.bold: true
+                        id: activeIssueText
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        text: "No Issue Selected"
                         color: colorWay.textColor
-                    }
-
-                    Rectangle {
-                        anchors {
-                            top: issuesFoundText.bottom
-                            left: parent.left
-                            right: parent.right
-                            bottom: parent.bottom
-                            margins: 5
-                        }
-                        color: "transparent"
-
-                        ListView {
-                            id: issueListView
-                            model: issueModel
-                            boundsBehavior: Flickable.StopAtBounds
-                            spacing: 3
-                            anchors.centerIn: parent
-                            height: contentHeight + 4
-                            width: parent.width
-                            clip: true
-
-                            delegate: Item {
-                                width: parent.width; height: 45
-
-                                Rectangle {
-                                    id: issueDelegateRect
-                                    anchors.centerIn: parent
-                                    width: parent.width - 10 //issueNameText.contentWidth + 14
-                                    height: parent.height
-                                    color: "transparent"
-                                    border.color: delegateMouseArea.containsMouse ? colorWay.accent1color : colorWay.separatorColor
-                                    border.width: 1 
-                                    radius: 5
-
-                                    Text {
-                                        id: issueNameText
-                                        anchors {
-                                            verticalCenter: parent.verticalCenter
-                                            left: parent.left
-                                            right:parent.right
-                                            leftMargin: 10
-                                            rightMargin: 10
-                                        }
-                                        text: issue_name
-                                        fontSizeMode: Text.Fit
-                                        minimumPixelSize: 12
-                                        font.pixelSize: 25
-                                        color: colorWay.textColor
-                                        elide: Text.ElideRight
-                                        horizontalAlignment: Text.AlignHCenter
-                                    }
-
-                                    MouseArea {
-                                        id: delegateMouseArea
-                                        anchors.fill: parent
-                                        hoverEnabled: true  
-                                        cursorShape: (solveInProgress === true) ? Qt.ForbiddenCursor : Qt.PointingHandCursor 
-                                        onClicked: {
-                                            if(solveInProgress == false) {
-                                                selectedIssue = issueModel.get(index)
-                                                showAISolution(selectedIssue)
-                                            }
-                                        }
-                                    }
-                                }  
-                            }
-                        }
+                        fontSizeMode: Text.Fit
+                        minimumPixelSize: 12
+                        font.pixelSize: 30
+                        wrapMode: Text.Wrap
+                        verticalAlignment: Text.AlignVCenter
+                        horizontalAlignment: Text.AlignHCenter
                     }
                 }
 
@@ -611,6 +554,7 @@ ApplicationWindow {
                             left: parent.left
                             right: parent.right
                             bottom: parent.bottom
+                            leftMargin: 10
                             margins: 6
                         }
 
@@ -660,26 +604,13 @@ ApplicationWindow {
 
                             Text {
                                 id: generatingText
-                                anchors {
-                                    top: parent.top
+                                anchors {   
                                     left: parent.left
+                                    verticalCenter: parent.verticalCenter
                                 } 
                                 text: "Generating solution..."
                                 font.pixelSize: 30
                                 color: colorWay.textColor
-                                visible: solveInProgress
-                            }
-
-                            Text {
-                                id: issueToSolveText
-                                anchors {
-                                    bottom: parent.bottom
-                                    left: parent.left
-                                    leftMargin: 5
-                                } 
-                                text: selectedIssue.issue_name
-                                font.pixelSize: 25
-                                color: colorWay.secondaryTextColor
                                 visible: solveInProgress
                             }
                         }
@@ -853,12 +784,6 @@ ApplicationWindow {
                     hilightColor = '#80FF0000'
                 }
             })
-
-            infoStream.dataPack.dataPack_lineNums.forEach(function(item) {
-                if(item === i+1) {
-                    hilightColor = '#80FF0000'
-                }
-            })
             
             var line = {
                 "line_index": (i+1).toString().padStart(4, " "),
@@ -873,12 +798,13 @@ ApplicationWindow {
         }
         viewSourceCode.contentWidth = maxLength
 
-        infoStream.mask_filt.mf_messages.forEach(function(item) {
-            temp += ("• " + item) + "\n"
-        })   
-        maskFiltPane.populateModule("Mask and Filter (" + infoStream.mask_filt.mf_issues + ")", temp)
+        //infoStream.mask_filt.mf_messages.forEach(function(item) {
+        //    temp += ("• " + item) + "\n"
+        //})  
+        maskFiltPane.populateModule("Mask and Filter (" + infoStream.mask_filt.mf_issues + ")", infoStream.mask_filt.mf_messages)
         if(infoStream.mask_filt.mf_issues !== 0) {
             temp = ""
+            /*
             aiStream.mask_filt.solution.forEach(function(item){
                 temp += item
             })
@@ -888,15 +814,17 @@ ApplicationWindow {
                 "previously_solved": aiStream.mask_filt.cached,
                 "issue_solution": temp
             })
+            */
         }
 
         temp = ""
-        infoStream.rtr.rtr_messages.forEach(function(item) {
-            temp += ("• " + item) + "\n"
-        })
-        rtrPane.populateModule("Remote Transmission Request (" + infoStream.rtr.rtr_issues + ")", temp)
+        //infoStream.rtr.rtr_messages.forEach(function(item) {
+        //    temp += ("• " + item) + "\n"
+        //})
+        rtrPane.populateModule("Remote Transmission Request (" + infoStream.rtr.rtr_issues + ")", infoStream.rtr.rtr_messages)
         if(infoStream.rtr.rtr_issues !== 0) {
             temp = ""
+            /*
             aiStream.rtr.solution.forEach(function(item){
                 temp += item
             })
@@ -906,15 +834,17 @@ ApplicationWindow {
                 "previously_solved": aiStream.rtr.cached,
                 "issue_solution": temp
             })
+            */
         }
 
         temp = ""
-        infoStream.idLen.idLen_messages.forEach(function(item) {
-            temp += ("• " + item) + "\n"
-        })
-        idLenPane.populateModule("ID Length (" + infoStream.idLen.idLen_issues + ")", temp)
+        //infoStream.idLen.idLen_messages.forEach(function(item) {
+        //    temp += ("• " + item) + "\n"
+        //})
+        idLenPane.populateModule("ID Length (" + infoStream.idLen.idLen_issues + ")", infoStream.idLen.idLen_messages)
         if(infoStream.idLen.idLen_issues !== 0) {
             temp = ""
+            /*
             aiStream.idLen.solution.forEach(function(item){
                 temp += item
             })
@@ -924,15 +854,17 @@ ApplicationWindow {
                 "previously_solved": aiStream.idLen.cached,
                 "issue_solution": temp
             })
+            */
         }
 
         temp = ""
-        infoStream.dlc.dlc_messages.forEach(function(item) {
-            temp += ("• " + item) + "\n"
-        })
-        dlcPane.populateModule("Data Length Code (" + infoStream.dlc.dlc_issues + ")", temp)
+        //infoStream.dlc.dlc_messages.forEach(function(item) {
+        //    temp += ("• " + item) + "\n"
+        //})
+        dlcPane.populateModule("Data Length Code (" + infoStream.dlc.dlc_issues + ")", infoStream.dlc.dlc_messages)
         if(infoStream.dlc.dlc_issues !== 0) {
             temp = ""
+            /*
             aiStream.dlc.solution.forEach(function(item){
                 temp += item
             })
@@ -942,15 +874,17 @@ ApplicationWindow {
                 "previously_solved": aiStream.dlc.cached,
                 "issue_solution": temp
             })
+            */ 
         }
 
         temp = ""
-        infoStream.dataPack.dataPack_messages.forEach(function(item) {
-           temp += ("• " + item) + "\n"
-        })
-        bytePackingPane.populateModule("Data Byte Packing (" + infoStream.dataPack.dataPack_issues + ")", temp)
+        //infoStream.dataPack.dataPack_messages.forEach(function(item) {
+        //   temp += ("• " + item) + "\n"
+        //})
+        bytePackingPane.populateModule("Data Byte Packing (" + infoStream.dataPack.dataPack_issues + ")", infoStream.dataPack.dataPack_messages)
         if(infoStream.dataPack.dataPack_issues !== 0) {
             temp = ""
+            /*
             aiStream.dataPack.solution.forEach(function(item){
                 temp += item
             })
@@ -960,54 +894,31 @@ ApplicationWindow {
                 "previously_solved": aiStream.dataPack.cached,
                 "issue_solution": temp
             })
+            */
         }
         totalIssuesFound = infoStream.totalIssues
-        
-        /*
-        if(infoStream.totalIssues === 0) {
-            noIssueRect.visible = true
-        }
-        else {
-            if(root.aiEnabled === false) {
-                noAiRect.visible = true
-            }
-            else {
-                var solutionText = ""
-                dataStream.solutions.forEach(function(item) {
-                    solutionText += (item + "\n")
-                })
-                suggestionTextBox.text = solutionText
-                suggestionTextRect.visible = true
-            }
-        }
-        */
         windowRoot.visible = true
     }
 
-    function showAISolution(issue) {
-        if(issue.previously_solved) {
+    function showAISolution(type, issueText) {
+        selectedIssue = aiStream[type]["solution"][issueText] 
+        activeIssueText.text = issueText
+        if(selectedIssue.cached) {
             solveInProgress = false
-            issueSolutionText.text = issue.issue_solution
+            issueSolutionText.text = selectedIssue.answer
             issuePlaceholderText.visible = false
             issueSolutionText.visible = true
         }
         else {
             issuePlaceholderText.visible = false
             solveInProgress = true
-            if(issue.abbreviation == "mask_filt") {
+            if(type == "mask_filt") {
                 var errorMsgs = "mf_messages"
             }
             else {
-                var errorMsgs = issue.abbreviation + "_messages"
+                var errorMsgs = type + "_messages"
             }
-
-            let type = infoStream[issue.abbreviation]
-            let msgs = type[errorMsgs]
-            var txt = ""
-            msgs.forEach(function(item) {
-                txt += (item+ "\n")
-            })
-            root.generateAISolution(issue.abbreviation, txt, infoStream.file_name)
+            root.generateAISolution(type, issueText, infoStream.file_name)
         }
     }
 
