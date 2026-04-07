@@ -7,10 +7,12 @@ class DLCAnalyzer:
     def __init__(self):
         self.msgList = []
         self.resultList = []
+        self.lineNums = []
 
     def _reset(self):
         self.msgList = []
         self.resultList = []
+        self.lineNums = []
 
     def checkDLC(self, root):
         self._reset()
@@ -134,11 +136,15 @@ class DLCAnalyzer:
                             issueStr = f"Expected less than actual: {msg_name}.{field_name}={dlc_val} at line {lineNum} (>8)."
                             if issueStr not in self.resultList:
                                 self.resultList.append(issueStr)
+                            if lineNum not in self.lineNums:
+                                self.lineNums.append(lineNum)
 
                         elif dlc_val < 8:
                             issueStr = f"Expected more than actual: {msg_name}.{field_name}={dlc_val} at line {lineNum} (<8)."
                             if issueStr not in self.resultList:
                                 self.resultList.append(issueStr)
+                            if lineNum not in self.lineNums:
+                                self.lineNums.append(lineNum)
 
             if cap == 'call_expr':
                 sendList = captures[cap]
@@ -191,11 +197,15 @@ class DLCAnalyzer:
                             issueStr = f"Expected less than actual: {callText} uses DLC={dlc_val} at line {lineNum} (>8)."
                             if issueStr not in self.resultList:
                                 self.resultList.append(issueStr)
+                            if lineNum not in self.lineNums:
+                                self.lineNums.append(lineNum)
 
                         elif expected is not None and dlc_val < expected:
                           issueStr = f"Expected more than actual: {callText} uses DLC={dlc_val} but {buf_raw}[{expected}] at line {lineNum}."
                           if issueStr not in self.resultList:
                               self.resultList.append(issueStr)
+                          if lineNum not in self.lineNums:
+                              self.lineNums.append(lineNum)
 
         print('#' * 100)
         print()
@@ -205,13 +215,13 @@ class DLCAnalyzer:
             print("No DLC usage found.")
             print()
             print('#' * 100)
-            return 0, ["No DLC usage found."]
+            return 0, ["No DLC usage found."], []
 
         if len(self.resultList) == 0:
             print("No issues detected!")
             print()
             print('#' * 100)
-            return 0, ["No issues detected!"]
+            return 0, ["No issues detected!"], []
 
         for issue in self.resultList:
             print(issue)
@@ -219,4 +229,4 @@ class DLCAnalyzer:
             
         print()
         print('#' * 100)
-        return issues, self.resultList
+        return issues, self.resultList, self.lineNums

@@ -791,6 +791,18 @@ ApplicationWindow {
                     hilightColor = '#80FF0000'
                 }
             })
+
+            infoStream.dataPack.dataPack_lineNums.forEach(function(item) {
+                if(item === i+1) {
+                    hilightColor = '#80FF0000'
+                }
+            })
+
+            infoStream.dlc.dlc_lineNums.forEach(function(item) {
+                if(item === i+1) {
+                    hilightColor = '#80FF0000'
+                }
+            })
             
             var line = {
                 "line_index": (i+1).toString().padStart(4, " "),

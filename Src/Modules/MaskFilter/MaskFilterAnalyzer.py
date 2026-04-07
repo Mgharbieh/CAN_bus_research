@@ -18,6 +18,7 @@ class MaskAndFilter():
         self.maskList = []
         self.setupFilterList = []
         self.loopFilterList = []
+        self.lineNums = [] 
         self.libraryDescriptor = []
 
     #############################################################################

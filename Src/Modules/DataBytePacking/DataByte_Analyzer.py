@@ -7,11 +7,13 @@ class DataBytePackingAnalyzer:
         self.buf_sizes = {} #declared byte buffers like: byte stmp[8];
         self.dlc_values = {} #DLC values assigned to variables or frame fields ex. canMsg.can_dlc = 8 
         self.frame_bytes = {} #track max bytes written into frame.data[] ex.canMsg.data[8] is 9 bytes
+        self.lineNums = []
 
     def _reset(self):
         self.buf_sizes = {}
         self.dlc_values = {}
         self.frame_bytes = {}
+        self.lineNums = []
 
     #helpers
     def _cap(self, root, q: str):
@@ -219,11 +221,12 @@ class DataBytePackingAnalyzer:
             return None, 0
 
         call_txt = self._txt(call_node)
+        line_num = call_node.start_point.row + 1 if call_node is not None else None
 
         fn_node = call_node.child_by_field_name("function")
         fn_txt = self._txt(fn_node).lower() if fn_node is not None else call_txt.lower()
 
-        args = [c for c in args_node.children if c.type not in ("(", ")", ",")]
+        args = [c for c in args_node.children if c.type not in ("(", ")", ",")] 
 
         #mcp2515.sendMessage(&canMsg)
         if "sendmessage" in fn_txt and len(args) >= 1:
@@ -240,7 +243,8 @@ class DataBytePackingAnalyzer:
                 dlc = 8
                 assumed = True
 
-            return self._compare(call_txt, dlc, self.frame_bytes.get(frame), assumed)
+            msg, inc = self._compare(call_txt, dlc, self.frame_bytes.get(frame), assumed)
+            return msg, inc, line_num
 
         #CAN.write(frame)
         if "write" in fn_txt and len(args) == 1:
@@ -257,7 +261,8 @@ class DataBytePackingAnalyzer:
                 dlc = 8
                 assumed = True
 
-            return self._compare(call_txt, dlc, self.frame_bytes.get(frame), assumed)
+            msg, inc = self._compare(call_txt, dlc, self.frame_bytes.get(frame), assumed)
+            return msg, inc, line_num
 
         #sendMsgBuf(..., dlc, buf) or write(id,type,dlc,buf)
         if len(args) >= 2:
@@ -271,7 +276,7 @@ class DataBytePackingAnalyzer:
                 if rtr_val is None:
                     rtr_val = self._resolve_dlc_before(self._txt(rtr_node), call_node.start_byte)
                 if rtr_val:
-                    return None, 0
+                    return None, 0, line_num
                 dlc_node, buf_node = args[3], args[4]
             else:
                 dlc_node, buf_node = args[-2], args[-1]
@@ -288,10 +293,10 @@ class DataBytePackingAnalyzer:
                 dlc = 8
                 assumed = True
 
-            return self._compare(call_txt, dlc, bytes_sent, assumed)
+            msg, inc = self._compare(call_txt, dlc, bytes_sent, assumed)
+            return msg, inc, line_num
 
-        return None, 0
-
+        return None, 0, line_num
     def checkDataPack(self, root):
         self._buf_decl_search(root)
         self._dlc_assign_search(root)
@@ -301,10 +306,13 @@ class DataBytePackingAnalyzer:
         issues = 0
 
         for call_node, args_node in self._can_calls(root):
-            msg, inc = self._analyze_call(call_node, args_node)
+            msg, inc, line_num = self._analyze_call(call_node, args_node)
             if msg:
                 messages.append(msg)
                 issues += inc
+                if inc > 0 and line_num is not None and line_num not in self.lineNums:
+                    self.lineNums.append(line_num)
 
+        lineNums = self.lineNums.copy()
         self._reset()
-        return issues, messages
+        return issues, messages, lineNums
