@@ -541,11 +541,20 @@ ApplicationWindow {
 
                     Text {
                         id: issuePlaceholderText
-                        anchors.centerIn: parent
-                        text: "Select an issue to view potential solutions"
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                            right: parent.right
+                            bottom: parent.bottom
+                            margins: 10
+                        }
+                        text: "Select an issue from the list above to view potential solutions"
                         font.pixelSize: 30
-                        color: textColor
+                        color: colorWay.textColor
                         visible: true
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
 
                     Text {

@@ -1,6 +1,11 @@
 import sys
 import ctypes
 import platform
+
+if(platform.system() == 'Windows'):
+    myappid = 'statican.gui.v14' 
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(ctypes.c_wchar_p(myappid))
+
 import IssueChecker 
 import fileHandler
 
@@ -184,16 +189,14 @@ class AnalysisInterface(QObject):
         self.threadPool.start(worker)
 
 app = QGuiApplication(sys.argv)
+app.setWindowIcon(QIcon("./Src/ui/assets/statican.ico"))
+
 splash = QQuickView(QUrl.fromLocalFile("./Src/ui/SplashScreen.qml"))
 splash.setFlags(Qt.WindowType.SplashScreen | Qt.WindowType.WindowStaysOnTopHint)
 splash.setColor(Qt.GlobalColor.transparent)
 splash.show()
 app.processEvents()
 
-if(platform.system() == 'Windows'):
-    myappid = 'statican.gui.v1' 
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-app.setWindowIcon(QIcon("./Src/ui/assets/statican.ico"))
 interface = AnalysisInterface()
 
 QQuickStyle.setStyle("Material")

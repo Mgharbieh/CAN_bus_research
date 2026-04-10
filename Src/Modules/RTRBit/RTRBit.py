@@ -12,6 +12,7 @@ class RTRBitChecker:
     def _reset(self):
         self.msgList = []
         self.resultList = []
+        self.lineNums = []
 
     def _checkRTRMode(self, root):
 

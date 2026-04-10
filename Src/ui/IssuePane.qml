@@ -75,17 +75,17 @@ Item {
                 //issueMouseArea.containsMouse ? colorWay.accent1color : "transparent"
                 border.color: {
                     if ((issueMouseArea.containsMouse) && 
-                        (issue_string.includes("No issues") || 
-                        issue_string.includes("no issues") || 
-                        issue_string.includes("no errors"))) {
-                            return "transparent"
-                        }
-                        else if (issueMouseArea.containsMouse) {
-                            return colorWay.accent1color
-                        }
-                        else {
-                            return "transparent"
-                        }
+                    (issue_string.includes("No issues") || 
+                    issue_string.includes("no issues") || 
+                    issue_string.includes("no errors"))) {
+                        return "transparent"
+                    }
+                    else if (issueMouseArea.containsMouse && root.aiEnabled == true) {
+                        return colorWay.accent1color
+                    }
+                    else {
+                        return "transparent"
+                    }
                 }
                 border.width: 1
                 radius: 5
@@ -109,22 +109,24 @@ Item {
                     anchors.fill: delegateRect
                     hoverEnabled: true
                     cursorShape: {
-                        if(issue_string.includes("No issues") || 
-                        issue_string.includes("no issues") || 
-                        issue_string.includes("no errors")) {
-                            return Qt.ArrowCursor
-                        }
-                        else {
-                            if(aiWorking) {
-                                return Qt.ForbiddenCursor
+                        if(root.aiEnabled === true) {
+                            if(issue_string.includes("No issues") || 
+                            issue_string.includes("no issues") || 
+                            issue_string.includes("no errors")) {
+                                return Qt.ArrowCursor
                             }
                             else {
-                                return Qt.PointingHandCursor
-                            }  
+                                if(aiWorking) {
+                                    return Qt.ForbiddenCursor
+                                }
+                                else {
+                                    return Qt.PointingHandCursor
+                                }  
+                            }
                         }
                     }
                     onClicked: {
-                        if(aiWorking == false) {
+                        if(aiWorking == false && root.aiEnabled == true) {
                             issueSelected(issue_string.substring(2))
                         }
                     }
@@ -136,28 +138,6 @@ Item {
     ListModel {
         id: issuePaneModel
     }
-
-    /*
-    TextArea {
-        id: issueTextArea
-        anchors {
-            top: issueTitleBar.bottom
-            left: parent.left
-            leftMargin: 10
-        }
-        topPadding: 3
-        
-        text: ""
-        color: colorWay.textColor
-        font.pixelSize: 25
-        readOnly: true
-        wrapMode: TextEdit.NoWrap
-        background: Rectangle {
-            color: colorWay.backgroundcolor2
-            radius: 15
-        }
-    }
-    */
 
     function populateModule(titleString, issueList) {
         issueTitleText.text = titleString
