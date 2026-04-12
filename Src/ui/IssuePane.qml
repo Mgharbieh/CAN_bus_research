@@ -77,7 +77,9 @@ Item {
                     if ((issueMouseArea.containsMouse) && 
                     (issue_string.includes("No issues") || 
                     issue_string.includes("no issues") || 
-                    issue_string.includes("no errors"))) {
+                    issue_string.includes("no errors") ||
+                    issue_string.includes("found")
+                    )) {
                         return "transparent"
                     }
                     else if (issueMouseArea.containsMouse && root.aiEnabled == true) {
@@ -112,7 +114,8 @@ Item {
                         if(root.aiEnabled === true) {
                             if(issue_string.includes("No issues") || 
                             issue_string.includes("no issues") || 
-                            issue_string.includes("no errors")) {
+                            issue_string.includes("no errors") ||
+                            issue_string.includes("found")) {
                                 return Qt.ArrowCursor
                             }
                             else {
