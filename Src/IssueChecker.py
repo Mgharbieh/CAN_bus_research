@@ -1,7 +1,7 @@
 from typing import List
 import platform
 import json
-import openai
+#import openai
 from pydantic import BaseModel, Field
 import tree_sitter as TreeSitter
 

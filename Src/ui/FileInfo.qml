@@ -906,23 +906,9 @@ ApplicationWindow {
         }
 
         temp = ""
-        //infoStream.dataPack.dataPack_messages.forEach(function(item) {
-        //   temp += ("• " + item) + "\n"
-        //})
         bytePackingPane.populateModule("Data Byte Packing (" + infoStream.dataPack.dataPack_issues + ")", infoStream.dataPack.dataPack_messages)
         if(infoStream.dataPack.dataPack_issues !== 0) {
             temp = ""
-            /*
-            aiStream.dataPack.solution.forEach(function(item){
-                temp += item
-            })
-            issueModel.append({
-                "issue_name": "Byte Packing", 
-                "abbreviation": "dataPack",
-                "previously_solved": aiStream.dataPack.cached,
-                "issue_solution": temp
-            })
-            */
         }
         totalIssuesFound = infoStream.totalIssues
         windowRoot.visible = true

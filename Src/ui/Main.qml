@@ -22,9 +22,9 @@ ApplicationWindow {
     property var fileInfoWindow: null
     property bool loadingWindow: false
     
-    //temp, find better solution later
     property var details
     property var sourceCode 
+    property string currentFileName: ""
     property bool aiEnabled: false
 
     signal scanFile(string path)
@@ -878,6 +878,7 @@ ApplicationWindow {
             if (component.status === Component.Ready) {
                 fileInfoWindow = component.createObject(null)
                 fileInfoWindow.setFileInfo(sourceCode, details)
+                currentFileName = details.data.file_name
                 fileInfoWindow.show()
                 loadingWindow = false
                 fileInfoWindow.closing.connect(function() {
@@ -886,10 +887,29 @@ ApplicationWindow {
             } else {
                 console.error("Error loading component:", component.errorString());
             }
-        } else {
+        } else if (fileInfoWindow !== null && currentFileName === details.data.file_name) {
             fileInfoWindow.raise();
+            fileInfoWindow.visibility = Window.Windowed
             fileInfoWindow.requestActivate();
             loadingWindow = false
+        }
+        else if (fileInfoWindow !== null && currentFileName !== details.data.file_name) {
+            fileInfoWindow.close()
+            fileInfoWindow = null
+            loadingWindow = true
+            var component = Qt.createComponent("FileInfo.qml");        
+            if (component.status === Component.Ready) {
+                fileInfoWindow = component.createObject(null)
+                fileInfoWindow.setFileInfo(sourceCode, details)
+                currentFileName = details.data.file_name
+                fileInfoWindow.show()
+                loadingWindow = false
+                fileInfoWindow.closing.connect(function() {
+                    fileInfoWindow = null;  
+                });
+            } else {
+                console.error("Error loading component:", component.errorString())
+            }
         }
     }
 
